@@ -1,6 +1,7 @@
 ---
 name: rust-on-npm
 description: Expert knowledge for publishing Rust code to npm, covering napi-rs native addons, Neon bindings, WebAssembly via wasm-pack, and pure binary distribution patterns. Use when building npm packages with Rust, creating Node.js native addons, or distributing Rust CLIs through npm.
+hash: b54c788763965b26
 ---
 
 # Publishing Rust to the npm Ecosystem

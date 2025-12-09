@@ -1,3 +1,9 @@
+---
+_fixed: true
+---
+
+# Clap: Building Command-Line Interfaces in Rust
+
 The **clap** crate is the standard for building command-line interfaces in Rust, offering two main API styles: the **Derive API** and the **Builder API**. Each has distinct advantages, and the best choice depends on your project's needs and your personal preference as a developer.
 
 Here is a comparison of the two primary modes of operation:
@@ -10,11 +16,11 @@ Here is a comparison of the two primary modes of operation:
 | **Compile Time** | **Slightly higher** due to procedural macro use. | **Lower**, unless you are already using other procedural macros. |
 | **Best For** | • Most applications<br>• Quick prototyping<br>• When you prefer a clean, declarative style | • Highly dynamic interfaces<br>• When compile time is a major concern<br>• Integration into complex, conditional logic |
 
-### 📝 Code Examples
+## Code Examples
 
 Here are concrete examples showing how to build the same simple CLI tool with both APIs.
 
-#### 1. Using the Derive API
+### Using the Derive API
 
 This approach is concise and integrates the CLI definition with the data structure holding the values.
 
@@ -42,7 +48,7 @@ fn main() {
 }
 ```
 
-#### 2. Using the Builder API
+### Using the Builder API
 
 This approach offers detailed, step-by-step control over the parser's construction.
 
@@ -85,16 +91,17 @@ fn main() {
 }
 ```
 
-### 🚀 Advanced Features and Ecosystem
+## Advanced Features and Ecosystem
 
 Beyond basic parsing, `clap` provides features for production-grade tools:
 
 - **Shell Completion**: The `clap_complete` crate can generate completion scripts for shells like bash, zsh, and fish at runtime or compile time. This makes your tool feel more polished and user-friendly.
 - **Layered Configuration**: For complex applications, you can layer command-line arguments on top of settings from config files and environment variables. A common pattern is to use `serde` to deserialize a config file, then let `clap` parse the command line, merging the two sources with clear precedence rules.
 
-### 💡 How to Choose and Next Steps
+## How to Choose and Next Steps
 
 Here are some practical guidelines for selecting the right API and where to go from here:
+
 - **Start with the Derive API** if you are new to `clap` or building a typical CLI application. Its simplicity and clarity help you get results quickly.
 - **Switch to or use the Builder API** if you find yourself needing to generate arguments dynamically based on runtime conditions (e.g., loading a list of valid choices from a file).
 - **You can mix both APIs** within the same project if necessary. For instance, you can use the Derive API for the main application structure and the Builder API to construct a particularly complex subcommand dynamically.
@@ -104,5 +111,3 @@ To effectively use `clap`:
 1. **Add it to your `Cargo.toml`**. For the Derive API, include the `derive` feature: `clap = { version = "4", features = ["derive"] }`.
 2. **Explore the official documentation** for details on validation, custom types, subcommands, and styling.
 3. **Use the `--help` output**. One of `clap`'s strengths is its automatically generated, professional-looking help messages; use them as a design tool for your interface.
-
-I hope this detailed overview helps you build excellent command-line tools with Rust. Are you working on a specific type of CLI application where you'd like more targeted examples for certain features, like subcommands or custom validators?

@@ -1,22 +1,14 @@
-
-Certainly! I'll provide a comprehensive deep dive into the `clap` crate for Rust, covering its modes of operation, pros and cons, and code examples. The main contents are as follows:
-
-- **Clap overview**: Introduction to clap's features and aspirations.
-- **Modes of operation**: Detailed comparison of Derive, Builder, and Hybrid APIs using a table.
-- **Argument types**: Explanation of positional, options, flags, and subcommands.
-- **Code examples**: Three practical examples demonstrating different clap features.
-- **Advanced features**: Coverage of custom validation, shell completions, and more.
-- **Ecosystem**: Related crates that extend clap's functionality.
-
--------
+---
+_fixed: true
+---
 
 # Comprehensive Guide to the Clap Crate for Rust Command-Line Interfaces
 
 ## 1 Introduction to Clap
 
-**Clap** (Command Line Argument Parser) is a powerful and widely-used Rust crate for creating command-line interfaces. It aims to provide a **polished CLI experience** out of the box with minimal boilerplate code while remaining flexible enough to accommodate various use cases 【turn0view0】. Clap generates help messages, error messages, and even shell completions automatically, allowing developers to focus on their application's core functionality rather than parsing logic.
+**Clap** (Command Line Argument Parser) is a powerful and widely-used Rust crate for creating command-line interfaces. It aims to provide a **polished CLI experience** out of the box with minimal boilerplate code while remaining flexible enough to accommodate various use cases. Clap generates help messages, error messages, and even shell completions automatically, allowing developers to focus on their application's core functionality rather than parsing logic.
 
-The crate is designed with several **key aspirations** in mind 【turn0view0】:
+The crate is designed with several **key aspirations** in mind:
 
 - Providing a polished user experience with common argument behaviors, suggested fixes for typos, colored output, and automatic help generation
 - Maintaining reasonable parse performance while offering flexibility
@@ -95,7 +87,7 @@ Clap supports various argument types that can be configured through either API:
 
 ### 3.1 Positional Arguments
 
-Arguments that are identified by their position rather than a flag 【turn1search0】:
+Arguments that are identified by their position rather than a flag:
 
 ```rust
 name: String  // Required positional
@@ -104,7 +96,7 @@ name: Vec<String>  // Multiple positional values
 
 ### 3.2 Options
 
-Named arguments that take values 【turn1search0】:
+Named arguments that take values:
 
 ```rust
 #[arg(short, long)]
@@ -113,7 +105,7 @@ name: String  // -n NAME or --name NAME
 
 ### 3.3 Flags
 
-Boolean options that don't take values 【turn1search1】:
+Boolean options that don't take values:
 
 ```rust
 #[arg(short, long)]
@@ -122,7 +114,7 @@ verbose: bool  // -v or --verbose
 
 ### 3.4 Subcommands
 
-Nested commands that create their own argument structure 【turn1search13】:
+Nested commands that create their own argument structure:
 
 ```rust
 #[command(subcommand)]
@@ -131,7 +123,7 @@ command: Option<Commands>,
 
 ### 3.5 Argument Actions
 
-Clap uses `ArgAction` to define how arguments behave when encountered 【turn1search5】【turn1search7】:
+Clap uses `ArgAction` to define how arguments behave when encountered:
 
 - **Set**: Store a single value (default for most arguments)
 - **Append**: Collect multiple values into a vector
@@ -188,7 +180,7 @@ Hello Me!
 
 ### 4.2 Example 2: CLI with Subcommands
 
-This example shows a git-like CLI with multiple subcommands using the Derive API 【turn1search13】:
+This example shows a git-like CLI with multiple subcommands using the Derive API:
 
 ```rust
 use clap::{Parser, Subcommand};
@@ -315,7 +307,7 @@ Timeout: Some(30)
 
 ### 5.1 Custom Validation and Parsing
 
-Clap allows custom value parsers for complex validation scenarios 【turn1search1】:
+Clap allows custom value parsers for complex validation scenarios:
 
 ```rust
 #[arg(value_parser = parse_port)]
@@ -333,7 +325,7 @@ fn parse_port(s: &str) -> Result<u16, String> {
 
 ### 5.2 Environment Variables
 
-With the `env` feature enabled, clap can read arguments from environment variables 【turn1search14】:
+With the `env` feature enabled, clap can read arguments from environment variables:
 
 ```rust
 #[arg(short, long, env = "DATABASE_URL")]
@@ -342,7 +334,7 @@ database: String,
 
 ### 5.3 Shell Completions
 
-Clap can generate shell completion scripts for various shells 【turn0view0】:
+Clap can generate shell completion scripts for various shells:
 
 ```rust
 // In build.rs
@@ -367,7 +359,7 @@ fn main() {
 
 ### 5.4 Custom Help Messages
 
-You can customize help messages extensively using doc comments and attributes 【turn1search1】:
+You can customize help messages extensively using doc comments and attributes:
 
 ```rust
 /// A brief description
@@ -383,7 +375,7 @@ struct Cli {
 
 ## 6 Ecosystem and Related Crates
 
-The clap ecosystem includes several complementary crates that extend its functionality 【turn0view0】:
+The clap ecosystem includes several complementary crates that extend its functionality:
 
 - **clap_complete**: Generate shell completion scripts
 - **clap_mangen**: Generate man page source (roff)

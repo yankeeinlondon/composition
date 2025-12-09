@@ -1,101 +1,156 @@
-# Rust AI/LLM Development
+---
+name: rust-ai
+description: Rust libraries and frameworks for LLM integration - provider SDKs, unified interfaces, orchestration frameworks, and local inference engines
+hash: "49f5bcd134defefd"
+---
 
-Expert knowledge for building LLM-powered applications in Rust, covering provider SDKs, unified interfaces, local inference engines, and orchestration frameworks.
+# Rust AI/LLM Integration
 
-## Ecosystem Overview
+Comprehensive guide to Rust's ecosystem for Large Language Model integration, covering provider-specific SDKs, multi-provider unified interfaces, orchestration frameworks, and local inference engines.
 
-The Rust LLM ecosystem spans four categories:
+## Quick Reference
 
-| Category | Purpose | Key Crates |
-|:---------|:--------|:-----------|
-| **Provider SDKs** | Direct API clients for specific LLM providers | `async-openai`, `anthropic-rs`, `ollama-rs` |
-| **Unified SDKs** | Single interface across multiple providers | `llm` (rllm), `genai`, `allms` |
-| **Local Inference** | Run models locally without API calls | `candle`, `mistral.rs`, `llama_cpp`, `kalosm` |
-| **Orchestration** | Chains, agents, RAG, and workflows | `rig`, `llm-chain`, `langchain-rust` |
+| Category | Libraries | Use Case |
+|----------|-----------|----------|
+| Provider SDKs | `async-openai`, `anthropic-rs`, `ollama-rs` | Direct API access to specific providers |
+| Unified SDKs | `llm`, `rllm`, `genai`, `allms` | Single interface for multiple providers |
+| Orchestration | `rig`, `llm-chain`, `kalosm`, `langchain-rust` | Complex workflows, RAG, agents |
+| Local Inference | `candle`, `mistral.rs`, `llama_cpp` | On-device model execution |
 
-## Quick Reference: Choosing a Library
+## Provider-Specific SDKs
 
-**For API-based development:**
-- Single provider (OpenAI/Anthropic) → Use provider-specific SDK
-- Multiple providers or flexibility → Use `llm` crate (unified interface)
-- OpenRouter compatibility → Configure OpenAI SDK with custom base URL
+### OpenAI
+- **`async-openai`**: Full-featured async client based on OpenAPI spec
+- **`openai-api-rs`**: Alternative client library
+- Supports chat completions, embeddings, images, streaming
 
-**For local/private inference:**
-- Full ML framework control → `candle` (Hugging Face)
-- High-performance inference → `mistral.rs`
-- Local-first with multimodal → `kalosm`
-- Direct llama.cpp access → `llama_cpp` or `llama-cpp-2`
+### Anthropic (Claude)
+- **`anthropic-rs`**: Unofficial SDK with async support
+- Uses `HUMAN_PROMPT` and `AI_PROMPT` delimiters
+- Supports streaming responses
 
-**For complex workflows:**
-- RAG applications → `rig` (best RAG abstractions)
-- Multi-step chains → `llm-chain` (LangChain-like)
-- Agent systems → `rig` or `langchain-rust`
+### Ollama (Local Models)
+- **`ollama-rs`**: Client for local Ollama server (localhost:11434)
+- Supports model management, streaming, and local LLM inference
 
-## Detailed Documentation
+See [provider-sdks.md](./provider-sdks.md) for detailed examples.
 
-For in-depth coverage, see these supplemental documents:
+## Multi-Provider Unified SDKs
 
-- [Provider SDKs](./providers.md) - OpenAI, Anthropic, Ollama direct clients
-- [Unified SDKs](./unified-sdks.md) - Multi-provider interfaces (`llm`, `genai`)
-- [Local Inference](./local-inference.md) - Candle, Mistral.rs, llama.cpp bindings
-- [Orchestration Frameworks](./orchestration.md) - Rig, llm-chain, Kalosm details
-- [Code Examples](./examples.md) - Working examples for each library
-- [Strategic Combinations](./combinations.md) - How to combine libraries effectively
+### llm Crate (RLLM)
+The `llm` crate provides a unified interface across providers:
+- Supports: OpenAI, Anthropic, Ollama, Google, DeepSeek, Groq, xAI
+- Features: Chat, streaming, embeddings, tool calls, prompt chains
+- Feature flags for backend selection
 
-## Common Patterns
+### genai
+Experimental multi-provider SDK covering OpenAI, Anthropic, Google PaLM, Cohere.
 
-### Basic Chat Completion (Unified SDK)
-```rust
-use llm::{LLMBuilder, backend::LLMBackend};
+See [unified-sdks.md](./unified-sdks.md) for usage patterns.
 
-let llm = LLMBuilder::new()
-    .backend(LLMBackend::OpenAI)
-    .api_key(std::env::var("OPENAI_API_KEY")?)
-    .model("gpt-4")
-    .build()?;
+## High-Level Orchestration Frameworks
 
-let reply = llm.chat(["Hello!"]).await?;
-```
+### Rig
+Modular framework for LLM-powered applications:
+- Unified `CompletionModel` and `EmbeddingModel` traits
+- Built-in RAG support with vector store integration (Qdrant, MongoDB, LanceDB)
+- Type-safe structured data extraction
+- Tool calling and agent abstractions
 
-### RAG with Rig
-```rust
-use rig::{completion::Prompt, providers::openai};
+### llm-chain
+LangChain-inspired chain orchestration:
+- Sequential and map-reduce chains
+- Template-based prompts with parameter substitution
+- OpenAI and local LLAMA drivers
+- Multi-step workflow composition
 
-let client = openai::Client::from_env();
-let rag_agent = client.context_rag_agent("gpt-4")
-    .preamble("Answer based on context")
-    .dynamic_context(1, vector_store.index(embedding_model))
-    .build();
-```
+### Kalosm
+Local-first AI meta-framework built on Candle:
+- Supports Llama, Mistral, Phi, Zephyr quantized models
+- Multimodal: text, audio (Whisper), image (Segment Anything)
+- Structured generation with custom parsers
+- Integrated vector search with SurrealDB
 
-### Local Inference with Kalosm
-```rust
-use kalosm::language::*;
+### LangChain-rust
+Community port of LangChain concepts:
+- PromptTemplate, Chain, Memory abstractions
+- Tool and agent definitions
+- Vector store integrations (Qdrant, SQLite, SurrealDB)
 
-let mut llm = Llama::new().await?;
-let mut stream = llm("Write a haiku:");
-stream.to_std_out().await?;
-```
+See [orchestration-frameworks.md](./orchestration-frameworks.md) for detailed examples.
 
-## Key Cargo Features
+## Local Inference Engines
 
-Most crates use feature flags to minimize dependencies:
+### Candle (Hugging Face)
+Minimalist ML framework for Rust:
+- GPU support (CUDA, Metal), WebAssembly
+- Implements LLaMA, Mistral, Phi, Stable Diffusion, Whisper
+- PyTorch-like API for tensor operations
+- Foundation for Kalosm and other frameworks
 
-```toml
-# Only enable needed backends
-llm = { version = "1.0", features = ["openai", "anthropic"] }
+### Mistral.rs
+High-performance LLM inference engine:
+- Text, vision, speech, and image generation models
+- ISQ (In-Place Quantization), PagedAttention, FlashAttention
+- Per-layer topology optimization for memory/speed tuning
+- MCP (Model Context Protocol) for external tool integration
+- OpenAI-compatible HTTP server
 
-# Candle with CUDA support
-candle-core = { version = "0.8", features = ["cuda"] }
+### llama.cpp Bindings
+- **`llama_cpp`**: High-level safe bindings
+- **`llama-cpp-2`**: Low-level raw bindings
+- **`llm_client`**: High-level wrapper with model downloading
+- Optimized CPU inference for GGUF/GGML models
 
-# Kalosm full feature set
-kalosm = { version = "0.3", features = ["full"] }
-```
+See [local-inference.md](./local-inference.md) for setup and examples.
 
-## External Resources
+## Composable Solutions
 
-- [Rig Documentation](https://docs.rig.rs/)
-- [Candle GitHub](https://github.com/huggingface/candle)
-- [Mistral.rs GitHub](https://github.com/EricLBuehler/mistral.rs)
-- [llm-chain Guide](https://www.shuttle.dev/blog/2024/06/06/llm-chain-langchain-rust)
-- [OpenRouter](https://openrouter.ai) - Unified LLM proxy with OpenAI-compatible API
+### RAG Pipeline
+Combine `rig` (RAG tooling) + `llm` (multi-provider access):
+- Use rig for vector store integration and embedding management
+- Use llm for flexible provider switching within rig's workflow
+
+### Agent Orchestration
+Combine `langchain-rust` (agent logic) + `llm` (provider abstraction):
+- LangChain-rust manages planning, execution, and tool use
+- llm provides unified interface for multiple LLM backends
+
+### Fully Local Stack
+Combine `llm-chain` or `kalosm` (orchestration) + `llama_cpp` (inference):
+- Define prompting logic with high-level framework
+- Execute with local llama.cpp for offline operation
+
+### Hybrid Cloud-Local
+- Use `ollama-rs` for quick local classifications
+- Fall back to `async-openai` for complex queries
+- Route based on query complexity
+
+See [combining-solutions.md](./combining-solutions.md) for architecture patterns.
+
+## Decision Guide
+
+**New async application with multiple providers**: `llm` crate or `rig`
+
+**RAG system with vector stores**: `rig` with companion crates
+
+**LangChain-style chains**: `llm-chain` or `langchain-rust`
+
+**Local-first multimodal AI**: `kalosm`
+
+**Maximum inference performance**: `mistral.rs` or `candle`
+
+**Simple local LLM server**: `ollama-rs`
+
+**Single provider integration**: Use provider-specific SDK directly
+
+## Key Dependencies
+
+Most crates require:
+- `tokio` for async runtime
+- `serde` for serialization
+- API keys via environment variables (e.g., `OPENAI_API_KEY`)
+
+For local inference:
+- GGUF/GGML model files
+- Optional: CUDA toolkit for GPU acceleration

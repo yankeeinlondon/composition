@@ -66,6 +66,7 @@ xxHash is a family of non-cryptographic hash functions renowned for exceptional 
 The original 32-bit version of xxHash, designed for 32-bit systems and applications where smaller hash values are sufficient. It offers excellent performance and hash quality but is outperformed by newer variants on 64-bit systems.
 
 **Best For:**
+
 - Embedded systems with 32-bit architectures
 - Memory-constrained environments
 - Legacy systems requiring 32-bit hashes
@@ -80,6 +81,7 @@ The original 32-bit version of xxHash, designed for 32-bit systems and applicati
 A 64-bit version that significantly improves performance on modern 64-bit architectures. It provides a larger hash space, reducing collision probability compared to XXH32.
 
 **Best For:**
+
 - General-purpose hashing on 64-bit systems
 - Databases and file systems
 - Network protocols
@@ -94,6 +96,7 @@ A 64-bit version that significantly improves performance on modern 64-bit archit
 The latest and most advanced variant introduces revolutionary improvements in both speed and hash quality. Optimized for modern CPUs with SIMD instructions (SSE2, AVX2, AVX512, NEON).
 
 **Best For:**
+
 - High-performance hash tables
 - Real-time data processing
 - Caching systems
@@ -138,6 +141,7 @@ Based on benchmarks from an Intel i7-9700K system (Ubuntu x64 20.04):
 For new TypeScript codebases that need xxHash, `hash-wasm` offers the best balance of performance, compatibility, and features.
 
 **Why hash-wasm:**
+
 - Cross-runtime: Works in Node, browsers, Deno, and Workers without native addons
 - Full xxHash coverage: XXH32, XXH64, XXH3, and XXH128
 - Great performance: Benchmarks show xxHash64 throughput slightly ahead of `xxhash-wasm`
@@ -180,6 +184,7 @@ const h128: bigint = xxh3.xxh128('hello', 0n);
 ```
 
 **Trade-offs:**
+
 - Node-only (no browser, Deno, or Workers)
 - Requires native addon compilation
 - Platform-specific binaries complicate deployment
@@ -243,6 +248,7 @@ console.log(hash.toString(16));
 For most Rust applications, `xxhash-rust` provides the optimal combination of performance, feature flexibility, and active maintenance.
 
 **Why xxhash-rust:**
+
 - Superior performance via extensive SIMD optimizations (SSE2, AVX2, AVX512, NEON)
 - Const fn support enables compile-time hash computation
 - Feature-gated algorithms for precise control over binary size
@@ -501,6 +507,7 @@ let result = hasher.digest();
 ### Cross-Language Consistency
 
 When hashing data across different languages:
+
 - Use the same seed value
 - Verify data encoding (especially UTF-8 for strings)
 - Use the same algorithm variant (XXH64 vs XXH3)

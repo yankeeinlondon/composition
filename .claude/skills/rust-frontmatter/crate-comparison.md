@@ -1,10 +1,25 @@
 # Rust Frontmatter Crate Comparison
 
+Detailed analysis of Rust crates for parsing frontmatter metadata from Markdown files.
+
+## Feature Comparison Matrix
+
+| Feature | markdown-frontmatter | gray_matter | yaml_front_matter | markdown-rs | fronma |
+|:--------|:-------------------:|:-----------:|:-----------------:|:-----------:|:------:|
+| YAML support | Feature | Feature | Built-in | Feature | Default |
+| TOML support | Feature | Feature | No | Feature | Feature |
+| JSON support | Feature | Feature | No | No | Feature |
+| Custom delimiters | No | Yes | No | No | No |
+| Excerpt parsing | No | Yes | No | No | No |
+| Full Markdown parsing | No | No | No | Yes | No |
+| Serde integration | Yes | Yes | Yes | Partial | Yes |
+| Optional frontmatter | Yes | Yes | No | Yes | Yes |
+
 ## Detailed Analysis
 
-### 1. `markdown-frontmatter`
+### markdown-frontmatter
 
-**Overview**: A dedicated, type-safe frontmatter parser designed specifically for extracting metadata from Markdown files.
+**Best for**: General-purpose frontmatter extraction with type safety.
 
 **Supported Formats**: YAML, TOML, JSON (via Cargo features)
 
@@ -25,13 +40,11 @@
 let (frontmatter, body) = markdown_frontmatter::parse::<T>(doc)?;
 ```
 
-**Best For**: General-purpose frontmatter extraction with type safety.
-
 ---
 
-### 2. `gray_matter`
+### gray_matter
 
-**Overview**: A Rust implementation of the popular JavaScript gray-matter library, offering maximum flexibility.
+**Best for**: Projects needing custom delimiters, excerpt extraction, or non-standard frontmatter formats.
 
 **Supported Formats**: YAML, TOML, JSON
 
@@ -56,13 +69,11 @@ let content = result.content;
 let excerpt = result.excerpt;
 ```
 
-**Best For**: Projects needing custom delimiters, excerpt extraction, or non-standard frontmatter formats.
-
 ---
 
-### 3. `yaml_front_matter`
+### yaml_front_matter
 
-**Overview**: A minimal crate focused solely on YAML frontmatter parsing.
+**Best for**: Projects exclusively using YAML frontmatter that want minimal dependencies.
 
 **Supported Formats**: YAML only
 
@@ -84,13 +95,11 @@ let metadata = document.metadata;
 let content = document.content;
 ```
 
-**Best For**: Projects exclusively using YAML frontmatter that want minimal dependencies.
-
 ---
 
-### 4. `markdown-rs` (markdown crate)
+### markdown-rs (markdown crate)
 
-**Overview**: A full-featured, CommonMark-compliant Markdown parser with frontmatter as an extension.
+**Best for**: Static site generators, documentation tools, or renderers where you need to process both frontmatter and Markdown content.
 
 **Supported Formats**: YAML, TOML (via feature flags)
 
@@ -105,13 +114,11 @@ let content = document.content;
 - More complex API for simple metadata extraction
 - Larger dependency footprint
 
-**Best For**: Static site generators, documentation tools, or renderers where you need to process both frontmatter and Markdown content.
-
 ---
 
-### 5. `fronma`
+### fronma
 
-**Overview**: A minimal frontmatter parser supporting multiple formats via feature flags.
+**Best for**: Lightweight projects that need basic multi-format support.
 
 **Supported Formats**: YAML (default), TOML, JSON
 
@@ -128,18 +135,16 @@ let content = document.content;
 
 **API Pattern**:
 ```rust
-let result = fronma::parse::<T>(doc)?;
+let result = fronma::parser::parse::<T>(doc)?;
 let headers = result.headers;
 let body = result.body;
 ```
 
-**Best For**: Lightweight projects that need basic multi-format support.
-
 ---
 
-### 6. `markdown-it-front-matter`
+### markdown-it-front-matter
 
-**Overview**: A plugin for the markdown-it parser ecosystem.
+**Best for**: Projects already using markdown-it for Markdown processing.
 
 **Supported Formats**: YAML, TOML, JSON
 
@@ -152,23 +157,6 @@ let body = result.body;
 - Requires markdown-it as dependency
 - Less straightforward for standalone frontmatter extraction
 - Plugin architecture adds complexity
-
-**Best For**: Projects already using markdown-it for Markdown processing.
-
----
-
-## Feature Comparison Matrix
-
-| Feature | markdown-frontmatter | gray_matter | yaml_front_matter | markdown-rs | fronma |
-|:--------|:-------------------:|:-----------:|:-----------------:|:-----------:|:------:|
-| YAML support | Feature | Feature | Built-in | Feature | Default |
-| TOML support | Feature | Feature | No | Feature | Feature |
-| JSON support | Feature | Feature | No | No | Feature |
-| Custom delimiters | No | Yes | No | No | No |
-| Excerpt parsing | No | Yes | No | No | No |
-| Full Markdown parsing | No | No | No | Yes | No |
-| Serde integration | Yes | Yes | Yes | Partial | Yes |
-| Optional frontmatter | Yes | Yes | No | Yes | Yes |
 
 ## Choosing the Right Crate
 

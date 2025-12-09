@@ -47,12 +47,14 @@ Ropey implements copy-on-write semantics for cloned ropes. An initial clone only
 ### Unicode and Line Handling
 
 **Unicode Support:**
+
 - Operations use Unicode scalar values as the atomic unit
 - All editing and slicing operations prevent creation of invalid UTF-8 data
 - Utilities for converting between scalar value indices and UTF-16 code unit indices
 - Facilitates interoperability with external APIs using UTF-16 encoding
 
 **Line-Aware Operations:**
+
 - Built-in awareness of line breaks for indexing and iteration
 - Recognition of various Unicode line endings including CRLF
 - Configurable line break recognition at build time through feature flags
@@ -61,6 +63,7 @@ Ropey implements copy-on-write semantics for cloned ropes. An initial clone only
 ### Rope Slices
 
 `RopeSlice` provides immutable views into portions of a Rope:
+
 - Supports all read-only operations available to full Rope objects
 - Includes iterators and ability to create sub-slices
 - Enables efficient working with text sections without copying
@@ -68,6 +71,7 @@ Ropey implements copy-on-write semantics for cloned ropes. An initial clone only
 ### RopeBuilder
 
 For efficient incremental construction of Ropes:
+
 - Optimizes internal structure creation compared to repeated insert operations
 - Useful when building documents from multiple pieces
 - Reduces overhead of piecemeal text construction
@@ -75,6 +79,7 @@ For efficient incremental construction of Ropes:
 ### Low-Level Access
 
 APIs for efficiently accessing internal text chunk representation:
+
 - Chunk fetching methods: `chunk_at_byte`, `chunk_at_char`, etc.
 - `Chunks` iterator for traversing internal structure
 - Enables client code to implement additional functionality with minimal overhead
@@ -82,6 +87,7 @@ APIs for efficiently accessing internal text chunk representation:
 ### Thread Safety
 
 Ropey ensures thread safety even though clones share memory:
+
 - Clones can be sent to other threads for reading and writing
 - Suitable for multi-threaded applications requiring concurrent text processing
 
@@ -100,6 +106,7 @@ Ropey demonstrates exceptional performance for text editing operations:
 *Benchmarks performed on a mobile i7 Intel CPU*
 
 **Coherent vs. Incoherent Insertions:**
+
 - Coherent insertions (all near the same location) achieve higher throughput
 - Incoherent insertions (random locations) are still highly performant
 - Both maintain predictable latency characteristics
@@ -121,6 +128,7 @@ Memory grows incrementally as clones diverge, enabling efficient version trackin
 ### SIMD Acceleration
 
 Ropey includes SIMD (Single Instruction, Multiple Data) optimizations:
+
 - Significantly improves performance on supported hardware
 - Beneficial for bulk text processing operations
 - Automatic use when available
@@ -287,17 +295,20 @@ A fork of Ropey maintaining compatibility with the original while potentially of
 ### Decision Guide
 
 Choose **Ropey** when:
+
 - You need robust Unicode handling
 - Line-aware operations are important
 - Thread safety is required
 - You want a well-documented, mature library
 
 Choose **Crop** when:
+
 - Maximum single-threaded performance is critical
 - Basic line tracking suffices
 - You can work without thread safety guarantees
 
 Choose **JumpRope** when:
+
 - Raw performance is the top priority
 - You do not need line tracking
 - Limited Unicode support is acceptable

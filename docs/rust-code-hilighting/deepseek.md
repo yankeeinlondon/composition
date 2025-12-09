@@ -1,3 +1,9 @@
+---
+_fixed: true
+---
+
+# Syntax Highlighting in Rust
+
 For syntax highlighting in Rust, two main crate options are **syntect** (a high-quality, regex-based highlighter) and **tree-sitter** (a parser-based system). While other specialized crates exist, syntect is the most widely used and documented, especially in the Rust ecosystem.
 
 Here is an overview of the two main crates.

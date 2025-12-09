@@ -1,23 +1,27 @@
+---
+_fixed: true
+---
+
 # Rust Code Highlighter Options
 
 ## 1. Conceptual landscape
 
-Rust has three main “families” of syntax highlighters:
+Rust has three main "families" of syntax highlighters:
 
- 1. TextMate grammar–based
-Classic, battle-tested; same ecosystem as VS Code/Sublime.
- • Crate: syntect  ￼
- 2. Tree-sitter–based building blocks
-Incremental parsing, great accuracy, but you wire more yourself.
- • Crates: tree-sitter-highlight, helper crates like pepegsitter  ￼
- 3. Tree-sitter “batteries included”
-One call in, HTML / ANSI out, with built-in grammars & themes.
- • Older: inkjet (archived now, recommends moving)  ￼
- • Modern successor: autumnus (crate autumnus, branded “Autumnus/Autumn”)  ￼
+1. **TextMate grammar-based**
+   - Classic, battle-tested; same ecosystem as VS Code/Sublime.
+   - Crate: `syntect`
 
-I’ll deep-dive those, then compare.
+2. **Tree-sitter-based building blocks**
+   - Incremental parsing, great accuracy, but you wire more yourself.
+   - Crates: `tree-sitter-highlight`, helper crates like `pepegsitter`
 
-⸻
+3. **Tree-sitter "batteries included"**
+   - One call in, HTML / ANSI out, with built-in grammars & themes.
+   - Older: `inkjet` (archived now, recommends moving)
+   - Modern successor: `autumnus` (crate autumnus, branded "Autumnus/Autumn")
+
+I'll deep-dive those, then compare.
 
 ## 2. syntect: TextMate grammars in Rust
 

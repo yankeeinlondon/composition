@@ -1,5 +1,7 @@
 # Rust Frontmatter Code Examples
 
+Working code examples for each frontmatter parsing library.
+
 ## markdown-frontmatter Examples
 
 ### Basic YAML Parsing

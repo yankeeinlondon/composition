@@ -1,198 +1,150 @@
-# Unified Multi-Provider SDKs
+# Multi-Provider Unified SDKs
 
-Libraries that provide a single interface across multiple LLM providers. Use these when you need provider flexibility or want to avoid vendor lock-in.
+Libraries providing a single interface across multiple LLM providers.
 
-## llm (RLLM)
+## llm Crate (RLLM)
 
-The primary unified SDK for Rust. Supports OpenAI, Anthropic, Ollama, DeepSeek, xAI, Phind, Groq, and Google.
+The primary unified SDK for Rust, published as `llm` on crates.io.
 
-**Cargo.toml:**
-```toml
-[dependencies]
-llm = { version = "1.0", features = ["openai", "anthropic", "ollama"] }
-tokio = { version = "1", features = ["full"] }
-```
+### Supported Backends
+- OpenAI
+- Anthropic (Claude)
+- Ollama
+- Google
+- DeepSeek
+- xAI
+- Phind
+- Groq
 
-### Basic Chat
+### Features
+- Chat-based interactions
+- Streaming responses
+- Usage metadata
+- Tool calls
+- Text completion
+- Embeddings generation
+- Request validation/retry logic
+- Agent modules
+- REST API exposure
+- Conversation history management
+
+### Basic Usage
 
 ```rust
-use llm::{LLMBuilder, backend::LLMBackend};
+use rllm::{LLMBuilder, backend::LLMBackend};
 
 #[tokio::main]
-async fn main() -> llm::Result<()> {
+async fn main() -> rllm::Result<()> {
     let llm = LLMBuilder::new()
-        .backend(LLMBackend::OpenAI)
+        .backend(LLMBackend::OpenAI)  // or Anthropic, Ollama, etc.
         .api_key(std::env::var("OPENAI_API_KEY")?)
-        .model("gpt-4")
+        .model("gpt-3.5-turbo")
         .build()?;
 
     let reply = llm.chat(["Hello, how are you?"]).await?;
-    println!("Response: {}", reply);
+    println!("Model reply: {}", reply);
     Ok(())
 }
 ```
 
-### Streaming
+### Switching Providers
 
 ```rust
-use llm::{LLMBuilder, backend::LLMBackend};
-use futures::StreamExt;
-
+// Simply change the backend and model
 let llm = LLMBuilder::new()
     .backend(LLMBackend::Anthropic)
     .api_key(std::env::var("ANTHROPIC_API_KEY")?)
-    .model("claude-3-sonnet-20240229")
+    .model("claude-3-sonnet")
     .build()?;
+```
 
-let mut stream = llm.chat_stream(["Explain quantum computing"]).await?;
-while let Some(chunk) = stream.next().await {
-    print!("{}", chunk?);
+### Feature Flags
+Enable only needed backends:
+
+```toml
+[dependencies]
+llm = { version = "1.0", features = ["openai", "anthropic", "ollama"] }
+```
+
+## llm Crate Detailed Example
+
+```rust
+use llm::{Chat, Result, llm_chat};
+use std::env;
+
+#[tokio::main]
+async fn main() -> Result<()> {
+    let api_key = env::var("OPENAI_API_KEY").expect("OPENAI_API_KEY not set");
+
+    let chat = llm_chat!("openai:gpt-4o", &api_key)
+        .await?
+        .with_system_message("You are a concise Rust programming expert.");
+
+    let response = chat
+        .send_user_message("Write a short example of a Rust struct.")
+        .await?;
+
+    println!("LLM Response:\n{}", response.content);
+    Ok(())
 }
 ```
 
-### Tool Calling
+## genai Crate
 
-```rust
-use llm::{LLMBuilder, Tool, ToolParameter};
+Experimental multi-provider SDK.
 
-let weather_tool = Tool::new("get_weather")
-    .description("Get current weather for a location")
-    .parameter(ToolParameter::new("location", "string")
-        .description("City name")
-        .required(true));
+### Supported Providers
+- OpenAI
+- Anthropic
+- Google PaLM
+- Cohere
 
-let llm = LLMBuilder::new()
-    .backend(LLMBackend::OpenAI)
-    .api_key(api_key)
-    .model("gpt-4")
-    .tools(vec![weather_tool])
-    .build()?;
-
-let response = llm.chat(["What's the weather in Paris?"]).await?;
-// Handle tool calls in response
-```
-
-### Embeddings
-
-```rust
-let llm = LLMBuilder::new()
-    .backend(LLMBackend::OpenAI)
-    .api_key(api_key)
-    .model("text-embedding-ada-002")
-    .build()?;
-
-let embeddings = llm.embed(["Hello world", "Rust is great"]).await?;
-```
-
-### Available Backends
-
-| Backend | Feature Flag | Models |
-|:--------|:-------------|:-------|
-| `LLMBackend::OpenAI` | `openai` | gpt-4, gpt-3.5-turbo, etc. |
-| `LLMBackend::Anthropic` | `anthropic` | claude-3-opus, claude-3-sonnet, etc. |
-| `LLMBackend::Ollama` | `ollama` | Any Ollama-served model |
-| `LLMBackend::DeepSeek` | `deepseek` | deepseek-chat, deepseek-coder |
-| `LLMBackend::Groq` | `groq` | llama2-70b, mixtral-8x7b |
-| `LLMBackend::Google` | `google` | gemini-pro, gemini-ultra |
-
-## genai (rust-genai)
-
-Experimental multi-provider SDK with ergonomic API.
-
-```rust
-use genai::{Client, Model};
-
-let client = Client::new()?;
-let response = client
-    .model(Model::OpenAI("gpt-4"))
-    .chat("What is Rust?")
-    .await?;
-```
-
-**Supported providers:** OpenAI, Anthropic, Google PaLM, Cohere
+### Design Philosophy
+- Ergonomic API
+- Feature-flagged providers
+- Common interface patterns
 
 ## allms
 
-Type-safe interactions across providers with shared interface.
+Type-safe interactions across providers:
+- OpenAI
+- Anthropic
+- Mistral
+- Gemini
 
-```rust
-use allms::{Client, Provider};
-
-let client = Client::new(Provider::OpenAI, api_key)?;
-let response = client.complete("Hello").await?;
-
-// Switch provider with same interface
-let client = Client::new(Provider::Anthropic, different_key)?;
-let response = client.complete("Hello").await?;
-```
+Attempts to share a common interface for all backends.
 
 ## llmclient
 
-Rust client for Gemini, OpenAI, Anthropic, and Mistral.
+Focused Rust client for:
+- Gemini
+- OpenAI
+- Anthropic
+- Mistral
 
-## Comparison
+## Choosing a Unified SDK
 
-| Crate | Providers | Streaming | Embeddings | Tool Calls | Agent Support |
-|:------|:----------|:----------|:-----------|:-----------|:--------------|
-| `llm` | 8+ | Yes | Yes | Yes | Yes (basic) |
-| `genai` | 4 | Yes | Partial | Partial | No |
-| `allms` | 4 | Yes | Yes | Partial | No |
-| `llmclient` | 4 | Yes | Yes | No | No |
+| Crate | Maturity | Provider Count | Special Features |
+|-------|----------|----------------|------------------|
+| `llm` (RLLM) | Production | 8+ | Chains, agents, REST API |
+| `genai` | Experimental | 4 | Ergonomic API |
+| `allms` | Active | 4 | Type safety focus |
+| `llmclient` | Active | 4 | Lightweight |
 
-## Best Practices
-
-### Feature Flag Optimization
-Only enable the backends you need to minimize compile time and binary size:
+## Cargo.toml
 
 ```toml
-# Only OpenAI and Anthropic
-llm = { version = "1.0", default-features = false, features = ["openai", "anthropic"] }
+[dependencies]
+# RLLM (recommended)
+llm = { version = "1.0", features = ["openai", "anthropic"] }
+
+# Alternative
+genai = "0.1"
 ```
 
-### Environment-Based Provider Selection
+## Sources
 
-```rust
-use llm::{LLMBuilder, backend::LLMBackend};
-
-let backend = match std::env::var("LLM_PROVIDER").as_deref() {
-    Ok("openai") => LLMBackend::OpenAI,
-    Ok("anthropic") => LLMBackend::Anthropic,
-    Ok("ollama") => LLMBackend::Ollama,
-    _ => LLMBackend::OpenAI, // default
-};
-
-let llm = LLMBuilder::new()
-    .backend(backend)
-    .api_key(std::env::var("LLM_API_KEY")?)
-    .model(std::env::var("LLM_MODEL")?)
-    .build()?;
-```
-
-### Fallback Pattern
-
-```rust
-async fn chat_with_fallback(prompt: &str) -> Result<String> {
-    // Try primary provider
-    if let Ok(response) = primary_llm.chat([prompt]).await {
-        return Ok(response);
-    }
-
-    // Fallback to secondary
-    fallback_llm.chat([prompt]).await
-}
-```
-
-## When to Use Unified SDKs
-
-**Advantages:**
-- Single API for multiple providers
-- Easy provider switching
-- Reduced learning curve
-- Good for A/B testing models
-
-**Disadvantages:**
-- May lag behind provider-specific features
-- Abstraction adds some overhead
-- Not all provider features exposed
-
-**Recommendation:** Use `llm` crate for most multi-provider applications. It has the best coverage and most active development.
+- [RLLM GitHub](https://github.com/graniet/rllm)
+- [llm crate](https://crates.io/crates/llm)
+- [rllm docs](https://docs.rs/rllm)
+- [genai crate](https://crates.io/crates/genai)

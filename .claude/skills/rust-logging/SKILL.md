@@ -42,6 +42,7 @@ description: Expert knowledge for implementing logging and tracing in Rust. Use 
 
 ## Detailed Documentation
 
+- [Deep Dive Guide](./deep-dive.md) - Comprehensive reference covering the entire logging/tracing ecosystem
 - [log Crate Guide](./log-guide.md) - The logging facade and env_logger
 - [tracing Framework](./tracing-guide.md) - Spans, events, subscribers, and async instrumentation
 - [Advanced Loggers](./advanced-loggers.md) - fern, flexi_logger, log4rs, slog

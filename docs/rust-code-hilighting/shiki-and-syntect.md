@@ -1,10 +1,14 @@
-Short answer: there’s no "drop in syntect into Shiki” adapter, but they are interoperable at the asset level (grammars & themes), and you can run syntect from the JS world alongside Shiki.
+---
+_fixed: true
+---
+
+# Shiki and Syntect Integration
+
+Short answer: there's no "drop in syntect into Shiki" adapter, but they are interoperable at the asset level (grammars & themes), and you can run syntect from the JS world alongside Shiki.
 
 Let me break down the practical options.
 
-⸻
-
-## 1. What they have in common
+## What They Have in Common
 
 Both Shiki and syntect:
  • Use TextMate grammars for tokenization.  ￼
