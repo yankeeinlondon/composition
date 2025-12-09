@@ -129,7 +129,7 @@ This again reinforces the idea: mdast generation is real work, and moving that p
 
 ### General Markdown Parser Surveys
 
-Blog posts that catalogue parsers (JS: micromark/remark; Rust: markdown-rs, comrak, pulldown-cmark, etc.) generally call out markdown-rs as the Rust sibling to micromark that targets CommonMark/GFM/MDX with an mdast AST. They don't publish numbers, but they implicitly group markdown-rs with other "high-performance" Rust parsers.
+Blog posts that catalogue parsers (JS: `micromark`/`remark`; Rust: `markdown-rs`, `comrak`, `pulldown-cmark`, etc.) generally call out `markdown-rs` as the Rust sibling to `micromark` that targets CommonMark/GFM/MDX with an mdast AST. They don't publish numbers, but they implicitly group `markdown-rs` with other "high-performance" Rust parsers.
 
 ---
 
@@ -137,13 +137,13 @@ Blog posts that catalogue parsers (JS: micromark/remark; Rust: markdown-rs, comr
 
 I did not find:
 
-- A published, neutral "markdown-rs vs remark/mdast" benchmark suite covering:
+- A published, neutral "`markdown-rs` vs `remark`/`mdast`" benchmark suite covering:
   - Normal markdown (docs/blog posts)
   - GFM quirks
   - MDX with realistic JSX, not just adversarial enormous code fences
-- Any cross-language benchmark with concrete multipliers like "Rust is 4.3× faster on 10 MB of CommonMark".
+- Any cross-language benchmark with concrete multipliers like "Rust is 4.3x faster on 10 MB of CommonMark".
 
-The only direct numbers are buried in the graphs of issue #113, which aren't text-parseable, and in the micromark intra-JS comparison (~50% slower than old remark core).
+The only direct numbers are buried in the graphs of issue #113, which aren't text-parseable, and in the `micromark` intra-JS comparison (~50% slower than old remark core).
 
 ### Recommended Benchmarking Approach
 
@@ -158,14 +158,14 @@ If you want hard data tailored to your workload, crib directly from that issue's
 
 You'll likely see something like:
 
-- **Rust mdast (markdown-rs)**: noticeably lower wall-clock time and lower CPU per document, especially for large batches.
-- **JS mdast (remark/mdast-util-from-markdown)**: still "fast enough" for many use cases, but can dominate build/SSR time when you have lots of MDX + heavy plugin chains.
+- **Rust mdast (`markdown-rs`)**: noticeably lower wall-clock time and lower CPU per document, especially for large batches.
+- **JS mdast (`remark`/`mdast-util-from-markdown`)**: still "fast enough" for many use cases, but can dominate build/SSR time when you have lots of MDX + heavy plugin chains.
 
 ---
 
 ## Practical Takeaways
 
-Given the limited—but non-zero—data:
+Given the limited - but non-zero - data:
 
 ### If You're Already in Rust and Just Need mdast
 
@@ -173,14 +173,14 @@ Given the limited—but non-zero—data:
 
 ### If You're in a JS/TS Stack and Care More About Perf Than Plugins
 
-Embedding markdown-rs via a small Rust service or via WASM is a reasonable route if mdast generation is the hot path (Docusaurus/MDX build style workloads). Expect some constant-factor speedup; how big depends on your input.
+Embedding `markdown-rs` via a small Rust service or via WASM is a reasonable route if mdast generation is the hot path (Docusaurus/MDX build style workloads). Expect some constant-factor speedup; how big depends on your input.
 
 ### If You Lean Heavily on the Remark/Rehype Plugin Ecosystem
 
-Today, JS remark + mdast-util-from-markdown is still the practical choice; the Rust side doesn't yet give you the same dynamic plugin story, and you'll end up paying IPC/WASM overhead to get back into JS to run plugins.
+Today, JS `remark` + `mdast-util-from-markdown` is still the practical choice; the Rust side doesn't yet give you the same dynamic plugin story, and you'll end up paying IPC/WASM overhead to get back into JS to run plugins.
 
 ---
 
 ## Summary
 
-There is one real benchmark and several strong signals that Rust's markdown-rs wins on constant factor for mdast generation, but you're still looking at the same broad algorithmic profile as the JS mdast/remark ecosystem rather than some order-of-magnitude asymptotic improvement.
+There is one real benchmark and several strong signals that Rust's `markdown-rs` wins on constant factor for mdast generation, but you're still looking at the same broad algorithmic profile as the JS `mdast`/`remark` ecosystem rather than some order-of-magnitude asymptotic improvement.

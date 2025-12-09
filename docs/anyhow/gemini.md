@@ -1,21 +1,21 @@
+---
+_fixed: true
+---
+
 # The `anyhow` Crate
 
 The `anyhow` crate is a widely-used and highly ergonomic Rust library that simplifies **application-level** error handling by providing a generic, type-erased error wrapper. Its primary purpose is to reduce the boilerplate associated with aggregating and propagating various error types from different dependencies up the call stack.
-
----
 
 ## Feature Set
 
 `anyhow` provides a single, concrete error type, `anyhow::Error`, which can represent any type that implements the standard library's `std::error::Error` trait. This is often described as a "dynamic" or "type-erased" error.
 
-* **Unified Error Type:** It provides `anyhow::Result<T>`, which is an alias for `Result<T, anyhow::Error>`. This allows all fallible functions in your application to return the same generic error type, avoiding the need for large error `enum`s that list every possible error source.
-* **Easy Propagation:** It seamlessly integrates with the **`?` operator**. Any error that implements `std::error::Error` is automatically converted into an `anyhow::Error` and propagated up the call stack.
-* **Error Context:** The **`Context` trait** (provided by `anyhow` and implemented for `Result` and `Option`) allows you to attach additional, human-readable context to the error chain, making debugging significantly easier. This is typically done with `.context(...)` or `.with_context(...)`.
-* **Backtraces:** By default, `anyhow` captures and prints a **backtrace** when an `anyhow::Error` is displayed, provided the user has enabled backtraces via environment variables (e.g., `RUST_BACKTRACE=1`). This gives a clear stack trace of where the error originated and propagated.
-* **Manual Error Creation:** It provides the powerful **`anyhow!` macro** to easily create a new `anyhow::Error` from a formatted string or another error, and the **`bail!` macro** for a quick early return of an error.
-* **Downcasting:** The underlying error can be recovered (downcast) if specific error handling is needed, though this is generally discouraged for application flow control and is typically reserved for logging or reporting.
-
----
+- **Unified Error Type:** It provides `anyhow::Result<T>`, which is an alias for `Result<T, anyhow::Error>`. This allows all fallible functions in your application to return the same generic error type, avoiding the need for large error `enum`s that list every possible error source.
+- **Easy Propagation:** It seamlessly integrates with the **`?` operator**. Any error that implements `std::error::Error` is automatically converted into an `anyhow::Error` and propagated up the call stack.
+- **Error Context:** The **`Context` trait** (provided by `anyhow` and implemented for `Result` and `Option`) allows you to attach additional, human-readable context to the error chain, making debugging significantly easier. This is typically done with `.context(...)` or `.with_context(...)`.
+- **Backtraces:** By default, `anyhow` captures and prints a **backtrace** when an `anyhow::Error` is displayed, provided the user has enabled backtraces via environment variables (e.g., `RUST_BACKTRACE=1`). This gives a clear stack trace of where the error originated and propagated.
+- **Manual Error Creation:** It provides the powerful **`anyhow!` macro** to easily create a new `anyhow::Error` from a formatted string or another error, and the **`bail!` macro** for a quick early return of an error.
+- **Downcasting:** The underlying error can be recovered (downcast) if specific error handling is needed, though this is generally discouraged for application flow control and is typically reserved for logging or reporting.
 
 ## Code Examples
 
@@ -26,7 +26,7 @@ To use `anyhow`, you typically add it to your `Cargo.toml`:
 anyhow = "1.0"
 ```
 
-### 1\. Basic Error Propagation and Aliasing
+### 1. Basic Error Propagation and Aliasing
 
 Using `anyhow::Result<T>` simplifies function signatures by removing the need to specify concrete error types.
 
@@ -58,7 +58,7 @@ fn main() {
 }
 ```
 
-### 2\. Adding Context
+### 2. Adding Context
 
 The `Context` trait (`.context()` or `.with_context()`) is one of the most important features, allowing you to wrap a lower-level error with a higher-level, more informative message.
 
@@ -87,9 +87,7 @@ fn main() {
 }
 ```
 
------
-
-## 🆚 Comparison to Other Crates
+## Comparison to Other Crates
 
 The choice between these crates often boils down to whether you are writing an **application** (executable) or a **library** (dependency).
 
@@ -107,5 +105,3 @@ The choice between these crates often boils down to whether you are writing an *
 3. **To get fancy error output,** use **`color-eyre`**. It offers a drop-in experience similar to `anyhow` but with much better default error display, making it perfect for CLI tools. It often replaces `anyhow` entirely in application development that prioritizes user-friendly error output.
 
 The common best practice is to use **`thiserror`** to define the concrete error types within a library, and then let an application (binary) using that library use **`anyhow`** (or `eyre`) to wrap and propagate those errors to the top-level handler.
-
-Would you like to see a specific example of how `anyhow` can wrap a custom error created with `thiserror`?

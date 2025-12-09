@@ -1,3 +1,7 @@
+---
+_fixed: true
+---
+
 # The `anyhow` Crate
 
 The `anyhow` crate provides a flexible, application-focused error handling system by using a single, dynamic error type. It's designed to minimize boilerplate while providing rich context for debugging.
@@ -21,7 +25,7 @@ extern crate anyhow; // Makes bail!, ensure!, etc. globally visible
 
 **Key Features in Practice**
 
-* **Unified Result Type**: Use `anyhow::Result<T>` as the return type for fallible functions. This allows the `?` operator to automatically convert any compatible error into an `anyhow::Error`.
+- **Unified Result Type**: Use `anyhow::Result<T>` as the return type for fallible functions. This allows the `?` operator to automatically convert any compatible error into an `anyhow::Error`.
 
     ```rust
     use anyhow::Result;
@@ -31,7 +35,7 @@ extern crate anyhow; // Makes bail!, ensure!, etc. globally visible
     }
     ```
 
-* **Attaching Context**: Use the `.context()` or `.with_context()` methods to add descriptive messages to errors, creating a clear chain of what went wrong.
+- **Attaching Context**: Use the `.context()` or `.with_context()` methods to add descriptive messages to errors, creating a clear chain of what went wrong.
 
     ```rust
     use anyhow::{Context, Result};
@@ -44,7 +48,7 @@ extern crate anyhow; // Makes bail!, ensure!, etc. globally visible
     // Error output: "Failed to read data for user 42" caused by "No such file or directory"
     ```
 
-* **Creating Errors**: Use the `anyhow!` macro for one-off errors or `bail!` to return early. The `ensure!` macro checks a condition.
+- **Creating Errors**: Use the `anyhow!` macro for one-off errors or `bail!` to return early. The `ensure!` macro checks a condition.
 
     ```rust
     use anyhow::{bail, ensure, Result};
@@ -58,7 +62,7 @@ extern crate anyhow; // Makes bail!, ensure!, etc. globally visible
     }
     ```
 
-* **Handling Specific Errors**: You can "downcast" an `anyhow::Error` back to its original type to handle specific cases.
+- **Handling Specific Errors**: You can "downcast" an `anyhow::Error` back to its original type to handle specific cases.
 
     ```rust
     fn handle_error(error: anyhow::Error) {
@@ -68,7 +72,7 @@ extern crate anyhow; // Makes bail!, ensure!, etc. globally visible
     }
     ```
 
-* **Backtrace Support**: With Rust 1.65+, `anyhow` automatically captures backtraces on error if enabled via the `RUST_BACKTRACE=1` environment variable.
+- **Backtrace Support**: With Rust 1.65+, `anyhow` automatically captures backtraces on error if enabled via the `RUST_BACKTRACE=1` environment variable.
 
 ## Comparison with Other Error Handling Crates
 
@@ -84,7 +88,7 @@ extern crate anyhow; // Makes bail!, ensure!, etc. globally visible
 
 ## How to Choose
 
-* **Use `anyhow`** for **applications, CLI tools, or services** where your main goal is to propagate errors with helpful messages and you don't need callers to handle specific error variants.
-* **Use `thiserror`** when building a **library** where you want to expose a stable, typed API so users can match on specific, documented error conditions.
-* **Use `color-eyre`** for application development where you want **extremely detailed, visually enhanced error and panic reports**, especially during active development or for user-facing binaries.
-* **Combine them**: A common pattern is to use `thiserror` to define precise error types within a library and then use `anyhow` or `color-eyre` in the binary that consumes the library for easy error handling.
+- **Use `anyhow`** for **applications, CLI tools, or services** where your main goal is to propagate errors with helpful messages and you don't need callers to handle specific error variants.
+- **Use `thiserror`** when building a **library** where you want to expose a stable, typed API so users can match on specific, documented error conditions.
+- **Use `color-eyre`** for application development where you want **extremely detailed, visually enhanced error and panic reports**, especially during active development or for user-facing binaries.
+- **Combine them**: A common pattern is to use `thiserror` to define precise error types within a library and then use `anyhow` or `color-eyre` in the binary that consumes the library for easy error handling.
