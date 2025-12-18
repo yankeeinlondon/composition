@@ -1,6 +1,7 @@
 ---
 name: rust-code-highlighting
 description: Expert knowledge for implementing syntax highlighting in Rust using syntect, tree-sitter, or autumnus. Use when building code highlighters, documentation tools, static site generators, or CLI tools that need syntax coloring.
+hash: fe5ea6ef9cfba084
 ---
 
 # Rust Code Highlighting

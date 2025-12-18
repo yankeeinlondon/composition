@@ -1,45 +1,33 @@
 # Composition
 
-A monorepo which contains the following modules:
+This monorepo has the following packages:
 
-- **Composition Library**
-- **Darkmatter LSP Server**
-- **CLI**
+1. **Library** (`/lib`)
+2. **CLI** (`/cli`)
+3. **LSP** (`/lsp`)
 
-Each of these modules will be discussed in the following sections. In addition to these modules directories, we also have a `./docs` directory intended to store valuable reusable knowledge bases on related technologies that will be used in this project.
+## Functional Goal
 
-## Module Details
+To provide a Rust library, CLI, and LSP that can compose content together using a myriad of strategies which are enabled by a [custom DSL](./docs/darkmatter-dsl.md) which sits on top of standard [CommonMark](https://commonmark.org/) and [GFM](https://github.github.com/gfm/) based Markdown content.
 
-### Composition Library
+## Modules
 
-The composition library provides primitives to _compose_ documents together. The root document is always expected to be a Markdown document but compositional elements of that root document can be sourced from:
+### Library Module
 
-- images
-- code files
-- other markdown documents
-- website summaries
-- PDF's
-- results of a web search
-- code diagnostics report
+- the functional specs can be found in the [Darkmatter DSL](./docs/darkmatter-dsl.md) document.
+- the expected library API surface is described in the [Library API Surface](./docs/library-api.md) document
 
-In addition to the various inputs allowed for composition:
+### CLI
 
-- the composition of various things can be made _conditional_.
-- The final output of this composed content can be Markdown _or_ HTML.
+- the [Clap](./claude/skills/clap) crate will be used to structure the CLI application
+- the [CLI User's Guide](./docs/cli-users-guide.md) provides an overview of the expected API surface for the CLI.
 
-#### Tech Stack
 
-- we use the [markdown-rs](https://github.com/wooorm/markdown-rs) crate to do Markdown parsing and convert to HTML when requested
-- we use XXX for _frontmatter_ metadata parsing
-- we use YYY for code block highlighting
+### LSP
 
-### Darkmatter LSP Server
+- The [LSP Technical Strategy](./docs/lsp-technical-strategy.md) document lays out current thinking on the LSP technical strategy
+- The [LSP Features](./docs/lsp-features.md) covers the desired features that this LSP will provide beyond the base Markdown features.
 
-The root document is always a Markdown-_ish_ file and in case of writing prose this root document is perfectly served by any existing Markdown LSP. However, this library accepts and encourages use a set of _language primitives_ for composing content that a normal Markdown LSP would not be able to help with.
+## Tech Stack
 
-To address this we're coining a new file format called **Darkmatter** with a file extension of `.dm` (e.g., `.md` inverted). The LSP for **Darkmatter** is a _super set_ of a Markdown parser which is aware of the extensions and will 
-
-#### Tech Stack
-
-- we use YYY as a LSP server framework
-- we use XXX as a baseline Markdown LSP
+- For detailed tech stack specifics refer to the [Composition Tech Stack](./docs/tech-stack.md) document.
