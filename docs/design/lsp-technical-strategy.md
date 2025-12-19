@@ -2,9 +2,10 @@
 
 ## Executive Summary
 
-The Composition LSP provides language intelligence for documents written in the [DarkMatter DSL](./darkmatter-dsl.md). Rather than forking or wrapping an existing Markdown LSP, we will **build a purpose-built LSP** using `tower-lsp` that leverages `pulldown-cmark` (already in our tech stack) as the Markdown parsing foundation, with a custom pre-processor layer to handle DarkMatter-specific syntax.
+The Composition LSP provides language intelligence for documents written in the [DarkMatter DSL](../features/darkmatter-dsl.md). Rather than forking or wrapping an existing Markdown LSP, we will **build a purpose-built LSP** using `tower-lsp` that leverages `pulldown-cmark` (already in our tech stack) as the Markdown parsing foundation, with a custom pre-processor layer to handle DarkMatter-specific syntax.
 
 This approach is chosen because:
+
 1. DarkMatter's block-level directives (`::file`, `::summarize`, `::table`, etc.) require semantic understanding that no existing Markdown LSP provides
 2. Our interpolation syntax (`{{variable}}`) and file reference system (`@path`) need context-aware completion tied to frontmatter and project structure
 3. Existing Markdown LSPs (marksman, markdown-oxide) are optimized for PKM/wiki-link workflows, not document composition

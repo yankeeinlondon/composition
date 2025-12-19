@@ -38,7 +38,7 @@ At times you will have a set of documents which you want to consolidate into a c
 ::consolidate ./abc.md ./def.md
 ```
 
-### 4. Topic Consolidation
+### 4. Topic Extraction
 
 Whereas a **Consolidation** attempts to move the content in the various files provided *in it's entirety* into the master document, a **Topic Consolidation** reviews all the documents provided and looks for information on a specified "topic". That topic is then isolated and the various document's information on the topic are consolidated into prose. In **Darkmatter** this would look something like:
 
@@ -47,6 +47,8 @@ Whereas a **Consolidation** attempts to move the content in the various files pr
 
 ::topic "linting" ./abc.md ./def.md
 ```
+
+You may request a review of the topic document by adding in the `--review` flag.
 
 ### 5. Tables
 
@@ -161,28 +163,13 @@ Markdown provides a way to add an image to a page with the `![alt text](./image.
     - add `data-{META}` tags to the image for metadata found
     - using one or more metadata properties to assign the `alt-text` property for screen readers, etc.
 
-More details can be found in the [Smart Image](./smart-image.md) specification document.
+More details can be found in the [Smart Image](../design/smart-image.md) specification document.
 
 ### 11. Frontmatter Interpolation
 
 Any frontmatter properties defined on a page can be rendered onto the page with the syntax `{{variable}}`.
 
-- In addition to the variables explicitly set on the page, some additional properties will be made available to pages for convenience:
-
-    - `{{today}}` - today's date in YYYY-MM-DD format
-    - `{{yesterday}}` - yesterday's date in YYYY-MM-DD format
-    - `{{tomorrow}}` - tomorrow's date in YYYY-MM-DD format
-    - `{{day_of_week}}` - the day of the week fully spelled out and capitalized (e.g., "Monday", "Tuesday", etc.)
-    - `{{day_of_week_abbr}}` - the day of the week in abbreviated form (e.g., "Mon", "Tue", etc.)
-    - `{{now}}` - the date and time in ISO DateTime format with local timezone information adjusted to UTC (e.g., `2025-12-12T06:45Z`)
-    - `{{now_local}}` - the date and time in ISO DateTime format (e.g., `2025-12-12T13:45-07:00`) with local timezone included
-    - `{{timezone}}` - will provide the user's timezone if it can be determined from the calling system; will return "unknown" if not
-    - `{{last_day_in_month}}` - provides a boolean value to indicate whether **today** is the last day of the month
-    - `{{month}}` - the current month in fully spelled out form (e.g., "January", "February", etc.)
-    - `{{month_abbr}}` - the current month represented in an abbreviated form (e.g., "Jan", "Feb", "Mar", etc.)
-    - `{{month_numeric}}` - the current month represented in numeric fashion
-    - `{{season}}` - the current season (e.g., "Spring", "Summer", "Fall", "Winter")
-    - `{{year}}`
+- In addition to the variables explicitly set on the page, some additional properties will be made available to pages for convenience: see [utility frontmatter](../reference/utility-frontmatter.md)
 
 - Of course if a page *defines* any of these variable names than that will take precedence over these utility defaults
 

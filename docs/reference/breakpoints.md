@@ -10,7 +10,7 @@ In several areas of the system the concept of "breakpoints" is leveraged. This i
 
 ## Image Widths
 
-When using [smart images](./smart-image.md), the image sizes will provide images at no larger than twice the breakpoint size but they also provide a `xs` and `micro` sized image which is:
+When using [smart images](../design/smart-image.md), the image sizes will provide images at no larger than twice the breakpoint size but they also provide a `xs` and `micro` sized image which is:
 
 - `xs` is equal to the `sm` breakpoint width
 - `micro` is equal to half of the `sm` breakpoint width

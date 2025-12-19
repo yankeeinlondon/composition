@@ -2,10 +2,10 @@
 
 ## All Modules
 
-- will use [thiserror](./kb/thiserror.md) for error definition and handling
+- will use [thiserror](../kb/thiserror.md) for error definition and handling
 - will use [tracing and open telemetry](../.claude/skills/rust-logging/opentelemetry.md) for logging
 - will use **cargo test** for unit testing
-- will use [criterion](./kb/rust-testing.md) for performance testing
+- will use [criterion](../kb/rust-testing.md) for performance testing
 - will use [xxhash-rust](../.claude/skills/xx-hash/rust.md) for hashing (see [hashing](./hashing.md))
 
 

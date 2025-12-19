@@ -62,11 +62,13 @@
         "tagfilter",
         "TARGETPLATFORM",
         "TASKLISTS",
+        "transclude",
         "unifiedjs",
         "usize",
         "wikilink",
         "wikilinks",
         "wooorm",
+        "Workplan",
         "Yann",
         "zigbuild",
         "ziglang"

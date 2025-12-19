@@ -37,4 +37,4 @@ and have a file extension that we know how to deal with.
     - `.wav`
 
 
-It's important to note that not all of these file extensions will always be allowed. It depends on the [document scope](./doc-scope.md) which groups of file extensions will be allowed.
+It's important to note that not all of these file extensions will always be allowed. It depends on the [document scope](./reference/doc-scope.md) which groups of file extensions will be allowed.

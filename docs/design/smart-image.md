@@ -1,6 +1,6 @@
 # Smart Image Design Document
 
-This document provides the technical design for the smart image feature of the `composition` library. See [Smart Image Requirements](./smart-image-requirements.md) for functional requirements.
+This document provides the technical design for the smart image feature of the `composition` library. See [Smart Image Requirements](../archive/smart-image-requirements.md) for functional requirements.
 
 ## Overview
 

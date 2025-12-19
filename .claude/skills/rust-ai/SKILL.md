@@ -6,151 +6,148 @@ hash: "49f5bcd134defefd"
 
 # Rust AI/LLM Integration
 
-Comprehensive guide to Rust's ecosystem for Large Language Model integration, covering provider-specific SDKs, multi-provider unified interfaces, orchestration frameworks, and local inference engines.
+Comprehensive guide to Rust's ecosystem for Large Language Model integration. This skill provides opinionated recommendations based on real-world usage patterns.
 
-## Quick Reference
+## Primary Recommendation: rig-core
 
-| Category | Libraries | Use Case |
-|----------|-----------|----------|
-| Provider SDKs | `async-openai`, `anthropic-rs`, `ollama-rs` | Direct API access to specific providers |
-| Unified SDKs | `llm`, `rllm`, `genai`, `allms` | Single interface for multiple providers |
-| Orchestration | `rig`, `llm-chain`, `kalosm`, `langchain-rust` | Complex workflows, RAG, agents |
-| Local Inference | `candle`, `mistral.rs`, `llama_cpp` | On-device model execution |
+For most Rust LLM applications, **[`rig-core`](https://crates.io/crates/rig-core)** is the recommended starting point:
 
-## Provider-Specific SDKs
+1. **Unified API**: Single interface for completions and embeddings across providers
+2. **RAG-Ready**: Built-in vector store abstractions and retrieval patterns
+3. **Type-Safe**: Rust-native with structured extraction via `#[derive(JsonSchema)]`
+4. **Extensible**: Trait-based design allows custom provider implementations
+5. **Production-Ready**: Used by VT Code, Dria, Cairnify in production
 
-### OpenAI
-- **`async-openai`**: Full-featured async client based on OpenAPI spec
-- **`openai-api-rs`**: Alternative client library
-- Supports chat completions, embeddings, images, streaming
+```rust
+use rig::{completion::Prompt, providers::openai};
 
-### Anthropic (Claude)
-- **`anthropic-rs`**: Unofficial SDK with async support
-- Uses `HUMAN_PROMPT` and `AI_PROMPT` delimiters
-- Supports streaming responses
+#[tokio::main]
+async fn main() -> Result<(), anyhow::Error> {
+    let client = openai::Client::from_env();  // Uses OPENAI_API_KEY
+    let model = client.model("gpt-4o").build();
+    let response = model.prompt("Summarize this...").await?;
+    Ok(())
+}
+```
 
-### Ollama (Local Models)
-- **`ollama-rs`**: Client for local Ollama server (localhost:11434)
-- Supports model management, streaming, and local LLM inference
+## Provider Support Matrix
+
+| Crate | OpenAI | Anthropic | Gemini | OpenRouter | Ollama | DeepSeek | Embeddings |
+|-------|--------|-----------|--------|------------|--------|----------|------------|
+| **rig-core** | Yes | Yes | Yes | Via OpenAI | Yes | No | Yes |
+| **llm/rllm** | Yes | Yes | Yes | Yes | Yes | Yes | Yes |
+| **async-openai** | Yes | No | No | Yes* | No | No | Yes |
+| **ollama-rs** | No | No | No | No | Yes | No | Yes |
+| **fastembed** | Local | Local | Local | Local | Local | Local | Yes (local) |
+
+*OpenRouter uses OpenAI-compatible API
+
+## Quick Decision Guide
+
+| Use Case | Primary | Alternative | Notes |
+|----------|---------|-------------|-------|
+| **Multi-provider completions** | `rig-core` | `llm` | rig for RAG, llm for more providers |
+| **Cloud embeddings** | `rig-core` | `async-openai` | Consistent with completion model |
+| **Local embeddings** | `fastembed` | `rig-fastembed` | ONNX-based, no API needed |
+| **Ollama local models** | `ollama-rs` | `llm` (ollama) | Direct control vs unified API |
+| **OpenRouter access** | `async-openai` | `openrouter_api` | Use OpenAI SDK with custom URL |
+| **DeepSeek models** | `llm` | OpenRouter | llm has native DeepSeek support |
+| **RAG pipelines** | `rig-core` | `langchain-rust` | rig has superior vector store support |
+| **SurrealDB vectors** | `rig-core` + `surrealdb` | `kalosm` | kalosm has built-in SurrealDB |
+
+## Library Categories
+
+### Provider-Specific SDKs
+Direct API access when you need full provider control:
+- **`async-openai`**: Full OpenAI API including embeddings, images, streaming
+- **`anthropic-rs`**: Claude models with streaming support
+- **`ollama-rs`**: Local Ollama server (localhost:11434)
+- **`openrouter_api`**: Native OpenRouter support
 
 See [provider-sdks.md](./provider-sdks.md) for detailed examples.
 
-## Multi-Provider Unified SDKs
-
-### llm Crate (RLLM)
-The `llm` crate provides a unified interface across providers:
-- Supports: OpenAI, Anthropic, Ollama, Google, DeepSeek, Groq, xAI
-- Features: Chat, streaming, embeddings, tool calls, prompt chains
-- Feature flags for backend selection
-
-### genai
-Experimental multi-provider SDK covering OpenAI, Anthropic, Google PaLM, Cohere.
+### Multi-Provider Unified SDKs
+Single interface for multiple providers:
+- **`llm` (RLLM)**: 8+ providers, chains, agents, REST API
+- **`genai`**: Experimental, ergonomic API
+- **`allms`**: Type safety focus
 
 See [unified-sdks.md](./unified-sdks.md) for usage patterns.
 
-## High-Level Orchestration Frameworks
-
-### Rig
-Modular framework for LLM-powered applications:
-- Unified `CompletionModel` and `EmbeddingModel` traits
-- Built-in RAG support with vector store integration (Qdrant, MongoDB, LanceDB)
-- Type-safe structured data extraction
-- Tool calling and agent abstractions
-
-### llm-chain
-LangChain-inspired chain orchestration:
-- Sequential and map-reduce chains
-- Template-based prompts with parameter substitution
-- OpenAI and local LLAMA drivers
-- Multi-step workflow composition
-
-### Kalosm
-Local-first AI meta-framework built on Candle:
-- Supports Llama, Mistral, Phi, Zephyr quantized models
-- Multimodal: text, audio (Whisper), image (Segment Anything)
-- Structured generation with custom parsers
-- Integrated vector search with SurrealDB
-
-### LangChain-rust
-Community port of LangChain concepts:
-- PromptTemplate, Chain, Memory abstractions
-- Tool and agent definitions
-- Vector store integrations (Qdrant, SQLite, SurrealDB)
+### Orchestration Frameworks
+Complex workflows, RAG, and agents:
+- **`rig-core`**: RAG, structured extraction, tool calling (recommended)
+- **`llm-chain`**: LangChain-style sequential chains
+- **`kalosm`**: Local-first multimodal (Candle-based)
+- **`langchain-rust`**: LangChain port with agent support
 
 See [orchestration-frameworks.md](./orchestration-frameworks.md) for detailed examples.
 
-## Local Inference Engines
-
-### Candle (Hugging Face)
-Minimalist ML framework for Rust:
-- GPU support (CUDA, Metal), WebAssembly
-- Implements LLaMA, Mistral, Phi, Stable Diffusion, Whisper
-- PyTorch-like API for tensor operations
-- Foundation for Kalosm and other frameworks
-
-### Mistral.rs
-High-performance LLM inference engine:
-- Text, vision, speech, and image generation models
-- ISQ (In-Place Quantization), PagedAttention, FlashAttention
-- Per-layer topology optimization for memory/speed tuning
-- MCP (Model Context Protocol) for external tool integration
-- OpenAI-compatible HTTP server
-
-### llama.cpp Bindings
-- **`llama_cpp`**: High-level safe bindings
-- **`llama-cpp-2`**: Low-level raw bindings
-- **`llm_client`**: High-level wrapper with model downloading
-- Optimized CPU inference for GGUF/GGML models
+### Local Inference Engines
+On-device model execution:
+- **`candle`**: Hugging Face ML framework (foundation for others)
+- **`mistral.rs`**: High-performance with ISQ, PagedAttention
+- **`llama_cpp`**: Bindings to llama.cpp for GGUF models
 
 See [local-inference.md](./local-inference.md) for setup and examples.
 
-## Composable Solutions
+### Embeddings
+Vector embeddings for semantic search:
+- **Cloud**: `rig-core` or `async-openai` with `text-embedding-3-small`
+- **Local**: `fastembed` (BGE models, ONNX-based, no API needed)
+- **Integration**: `rig-fastembed` bridges fastembed with rig's API
 
-### RAG Pipeline
-Combine `rig` (RAG tooling) + `llm` (multi-provider access):
-- Use rig for vector store integration and embedding management
-- Use llm for flexible provider switching within rig's workflow
+See [embeddings-strategy.md](./embeddings-strategy.md) for hybrid patterns.
 
-### Agent Orchestration
-Combine `langchain-rust` (agent logic) + `llm` (provider abstraction):
-- LangChain-rust manages planning, execution, and tool use
-- llm provides unified interface for multiple LLM backends
+## Recommended Cargo.toml
 
-### Fully Local Stack
-Combine `llm-chain` or `kalosm` (orchestration) + `llama_cpp` (inference):
-- Define prompting logic with high-level framework
-- Execute with local llama.cpp for offline operation
+```toml
+[dependencies]
+# Primary framework
+rig-core = { version = "0.9", features = ["derive"] }
+rig-fastembed = "0.1"  # Local embeddings
 
-### Hybrid Cloud-Local
-- Use `ollama-rs` for quick local classifications
-- Fall back to `async-openai` for complex queries
-- Route based on query complexity
+# Alternative unified SDK
+llm = { version = "1.0", features = ["openai", "anthropic", "ollama"], optional = true }
 
-See [combining-solutions.md](./combining-solutions.md) for architecture patterns.
+# Direct provider SDKs
+async-openai = "0.28"
+ollama-rs = { version = "0.2", features = ["stream"] }
+openrouter_api = "0.7"
 
-## Decision Guide
+# Local embeddings
+fastembed = "4"
 
-**New async application with multiple providers**: `llm` crate or `rig`
+# Database (for caching/vectors)
+surrealdb = { version = "2", features = ["protocol-ws", "kv-mem"] }
 
-**RAG system with vector stores**: `rig` with companion crates
+# Async runtime
+tokio = { version = "1", features = ["full"] }
 
-**LangChain-style chains**: `llm-chain` or `langchain-rust`
+# Error handling
+thiserror = "2"
+anyhow = "1"
 
-**Local-first multimodal AI**: `kalosm`
+# Utilities
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+chrono = { version = "0.4", features = ["serde"] }
+xxhash-rust = { version = "0.8", features = ["xxh3"] }
+```
 
-**Maximum inference performance**: `mistral.rs` or `candle`
+## Architecture Patterns
 
-**Simple local LLM server**: `ollama-rs`
+See [combining-solutions.md](./combining-solutions.md) for:
+- Provider abstraction with environment-based model selection
+- Hybrid cloud-local deployment
+- SurrealDB integration for embeddings and response caching
+- Complete service architectures
 
-**Single provider integration**: Use provider-specific SDK directly
+## Sources
 
-## Key Dependencies
-
-Most crates require:
-- `tokio` for async runtime
-- `serde` for serialization
-- API keys via environment variables (e.g., `OPENAI_API_KEY`)
-
-For local inference:
-- GGUF/GGML model files
-- Optional: CUDA toolkit for GPU acceleration
+- [rig-core](https://crates.io/crates/rig-core) - [Docs](https://docs.rs/rig-core) - [Website](https://rig.rs/)
+- [llm/rllm](https://crates.io/crates/llm) - [GitHub](https://github.com/graniet/rllm)
+- [fastembed](https://crates.io/crates/fastembed) - [GitHub](https://github.com/Anush008/fastembed-rs)
+- [async-openai](https://crates.io/crates/async-openai)
+- [ollama-rs](https://crates.io/crates/ollama-rs)
+- [SurrealDB](https://surrealdb.com/docs)

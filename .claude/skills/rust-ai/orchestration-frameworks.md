@@ -2,15 +2,17 @@
 
 Frameworks for complex LLM workflows, RAG systems, and agent development.
 
-## Rig
+## Rig (Recommended)
 
-Modular framework for LLM-powered applications with focus on RAG.
+Modular framework for LLM-powered applications with focus on RAG and type safety.
 
-### Core Features
-- Unified `CompletionModel` and `EmbeddingModel` traits
-- Vector store integrations (Qdrant, MongoDB, LanceDB)
-- Type-safe structured data extraction
-- Tool calling and agents
+### Why Rig?
+
+1. **Unified API**: Single interface for completions and embeddings across providers
+2. **RAG-Ready**: Built-in vector store abstractions and retrieval patterns
+3. **Type-Safe**: Structured extraction via `#[derive(JsonSchema)]`
+4. **Extensible**: Trait-based design for custom provider implementations
+5. **Production-Ready**: Used by VT Code, Dria, Cairnify in production
 
 ### Basic Completion
 
@@ -20,7 +22,7 @@ use rig::{completion::Prompt, providers::openai};
 #[tokio::main]
 async fn main() -> Result<(), anyhow::Error> {
     let openai_client = openai::Client::from_env();
-    let gpt4 = openai_client.model("gpt-4").build();
+    let gpt4 = openai_client.model("gpt-4o").build();
 
     let response = gpt4.prompt("Explain quantum computing in one sentence.").await?;
     println!("GPT-4: {}", response);
@@ -28,7 +30,115 @@ async fn main() -> Result<(), anyhow::Error> {
 }
 ```
 
-### RAG Agent
+### Provider Abstraction Pattern
+
+Create a unified interface that works with multiple providers:
+
+```rust
+use rig::completion::{CompletionModel, Prompt};
+use rig::providers::{openai, anthropic, ollama};
+
+pub enum ModelProvider {
+    OpenAI(openai::Client),
+    Anthropic(anthropic::Client),
+    Ollama(ollama::Client),
+}
+
+pub struct CompositionAI {
+    client: Box<dyn CompletionModel>,
+    embedding_model: Box<dyn rig::embeddings::EmbeddingModel>,
+}
+
+impl CompositionAI {
+    /// Parse "provider/model" format from environment
+    pub fn from_env_model(model_str: &str) -> Result<Self, anyhow::Error> {
+        let parts: Vec<&str> = model_str.split('/').collect();
+        let (provider, model_name) = (parts[0], parts[1]);
+
+        let client: Box<dyn CompletionModel> = match provider {
+            "openai" => {
+                let client = openai::Client::from_env();
+                Box::new(client.model(model_name).build())
+            }
+            "anthropic" => {
+                let client = anthropic::Client::from_env();
+                Box::new(client.model(model_name).build())
+            }
+            "ollama" => {
+                let client = ollama::Client::from_env();
+                Box::new(client.model(model_name).build())
+            }
+            "openrouter" => {
+                // OpenRouter uses OpenAI-compatible API
+                let client = openai::Client::new(
+                    &std::env::var("OPENROUTER_API_KEY")?,
+                    "https://openrouter.ai/api/v1"
+                );
+                Box::new(client.model(model_name).build())
+            }
+            _ => anyhow::bail!("Unsupported provider: {}", provider),
+        };
+
+        // Similar pattern for embeddings...
+        Ok(Self { client, embedding_model: todo!() })
+    }
+
+    pub async fn summarize(&self, content: &str) -> Result<String, anyhow::Error> {
+        let prompt = format!(
+            "Summarize the following content concisely:\n\n{}\n\nSummary:",
+            content
+        );
+        Ok(self.client.prompt(&prompt).await?)
+    }
+
+    pub async fn consolidate(&self, documents: &[&str]) -> Result<String, anyhow::Error> {
+        let combined = documents.join("\n\n---\n\n");
+        let prompt = format!(
+            "Consolidate these documents into a cohesive whole, \
+             restructuring and supplementing as needed:\n\n{}\n\nConsolidated document:",
+            combined
+        );
+        Ok(self.client.prompt(&prompt).await?)
+    }
+}
+```
+
+### Type-Safe Structured Extraction
+
+Use rig's `#[derive(JsonSchema)]` for structured output:
+
+```rust
+use serde::Deserialize;
+use rig::providers::openai::Client;
+
+#[derive(Debug, Deserialize, rig::JsonSchema)]
+pub struct ExtractedTopic {
+    pub topic_name: String,
+    pub summary: String,
+    pub key_points: Vec<String>,
+    pub related_concepts: Vec<String>,
+}
+
+pub async fn extract_topic(
+    documents: &[&str],
+    topic: &str,
+) -> Result<ExtractedTopic, anyhow::Error> {
+    let client = Client::from_env();
+    let extractor = client.extractor::<ExtractedTopic>("gpt-4o")
+        .preamble(&format!(
+            "You are an expert at extracting information about '{}' from documents. \
+             Analyze the provided documents and extract all relevant information about this topic.",
+            topic
+        ))
+        .build();
+
+    let combined = documents.join("\n\n---\n\n");
+    let extracted: ExtractedTopic = extractor.extract(&combined).await?;
+    Ok(extracted)
+}
+```
+
+### RAG Agent with Vector Store
 
 ```rust
 use rig::{
@@ -41,20 +151,20 @@ use rig::{
 #[tokio::main]
 async fn main() -> Result<(), anyhow::Error> {
     let openai_client = Client::from_env();
-    let embedding_model = openai_client.embedding_model("text-embedding-ada-002");
+    let embedding_model = openai_client.embedding_model("text-embedding-3-small");
 
     let mut vector_store = InMemoryVectorStore::default();
 
     let embeddings = EmbeddingsBuilder::new(embedding_model.clone())
         .simple_document("doc1", "Rig is a Rust library for LLM applications.")
-        .simple_document("doc2", "Rig supports OpenAI and Cohere.")
+        .simple_document("doc2", "Rig supports OpenAI and Anthropic providers.")
         .build()
         .await?;
     vector_store.add_documents(embeddings).await?;
 
-    let rag_agent = openai_client.context_rag_agent("gpt-4")
-        .preamble("You answer questions about Rig.")
-        .dynamic_context(1, vector_store.index(embedding_model))
+    let rag_agent = openai_client.context_rag_agent("gpt-4o")
+        .preamble("You answer questions based on the provided context.")
+        .dynamic_context(3, vector_store.index(embedding_model))
         .build();
 
     let response = rag_agent.prompt("What is Rig?").await?;
@@ -63,26 +173,41 @@ async fn main() -> Result<(), anyhow::Error> {
 }
 ```
 
-### Type-Safe Extraction
+### Embeddings with rig-core
 
 ```rust
-use serde::Deserialize;
-use rig::providers::openai::Client;
+use rig::embeddings::{EmbeddingsBuilder, EmbeddingModel};
+use rig::providers::openai;
 
-#[derive(Deserialize, rig::JsonSchema)]
-struct Person {
-    name: String,
-    age: u8,
+pub struct DocumentEmbedder {
+    embedding_model: openai::EmbeddingModel,
 }
 
-#[tokio::main]
-async fn main() -> Result<(), anyhow::Error> {
-    let openai_client = Client::from_env();
-    let extractor = openai_client.extractor::<Person>("gpt-4").build();
+impl DocumentEmbedder {
+    pub fn new() -> Self {
+        let client = openai::Client::from_env();
+        let embedding_model = client.embedding_model("text-embedding-3-small");
+        Self { embedding_model }
+    }
 
-    let person: Person = extractor.extract("John Doe is 30 years old").await?;
-    println!("{:?}", person);
-    Ok(())
+    pub async fn embed_documents(
+        &self,
+        documents: Vec<(&str, &str)>,  // (id, content)
+    ) -> Result<Vec<rig::embeddings::Embedding>, anyhow::Error> {
+        let mut builder = EmbeddingsBuilder::new(self.embedding_model.clone());
+
+        for (id, content) in documents {
+            builder = builder.simple_document(id, content);
+        }
+
+        let embeddings = builder.build().await?;
+        Ok(embeddings)
+    }
+
+    pub async fn embed_query(&self, query: &str) -> Result<Vec<f32>, anyhow::Error> {
+        let embedding = self.embedding_model.embed_text(query).await?;
+        Ok(embedding.vec)
+    }
 }
 ```
 
@@ -251,14 +376,15 @@ println!("{}", result);
 
 | Framework | Focus | Local Models | RAG Built-in | Agent Support |
 |-----------|-------|--------------|--------------|---------------|
-| Rig | RAG, structured extraction | Via providers | Yes | Yes |
+| **Rig** | RAG, structured extraction | Via providers | Yes | Yes |
 | llm-chain | Sequential chains | Via drivers | With extensions | Limited |
 | Kalosm | Local-first, multimodal | Native | Yes | Limited |
 | LangChain-rust | LangChain parity | Via Ollama | With integrations | Yes |
 
 ## Sources
 
-- [Rig](https://rig.rs/) / [GitHub](https://github.com/0xPlaygrounds/rig)
+- [Rig](https://rig.rs/) / [GitHub](https://github.com/0xPlaygrounds/rig) / [Docs](https://docs.rig.rs/)
+- [Rig RAG Guide](https://docs.rig.rs/guides/rag/rag_system)
 - [llm-chain](https://github.com/sobelio/llm-chain)
 - [Kalosm](https://docs.rs/kalosm)
 - [LangChain-rust](https://github.com/Abraxas-365/langchain-rust)
