@@ -1,57 +1,54 @@
-# Composition Project
+# CLAUDE.md
 
-This monorepo has the following packages:
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-1. **Library** (`/lib`)
-2. **CLI** (`/cli`)
-3. **LSP** (`/lsp`)
+## Project Overview
 
-## Library Module
+Composition is a Rust monorepo for document composition with three modules:
 
-Exposes the following functions to any calling application code:
+- **Library** (`/lib`) - Core library exposing `init`, `graph`, `validate`, `resolve`, `parse`, and `toHTML` functions
+- **CLI** (`/cli`) - Command-line interface using Clap: `compose <input> --out <dir> [--html]`
+- **LSP** (`/lsp`) - Language server for editor integration with file autocomplete and interpolation support
 
-1. `init(dir)`
+The project implements the **DarkMatter DSL**, a custom superset of CommonMark/GFM markdown for content composition. Key DSL features include transclusion (`::file`), LLM-powered summarization (`::summarize`), consolidation (`::consolidate`), tables/charts, popovers, and frontmatter interpolation (`{{variable}}`).
 
-   - determines where the SurrealDB database file should be located for files under the passed in `dir`
-     - if the `dir` passed in is part of a **git** repo then the database will be stored in the repo's root as `_composition-cache.db`
-     - if not then we look for the database in `${HOME}/_composition-cache.db`
-   - if SurrealDB file already exists then exit on success, if not then create the database before exiting
+## Tech Stack
 
-2. `graph(filepath)`
+- **Language**: Rust
+- **Markdown parsing**: [pulldown-cmark](https://github.com/pulldown-cmark/pulldown-cmark) for CommonMark/GFM
+- **Error handling**: thiserror
+- **CLI**: Clap
+- **Caching**: SurrealDB (stored as `_composition-cache.db` in git root or `$HOME`)
 
-   - determines the dependency graph for the passed in file
+## Architecture
 
-3. `validate(filepath)`
+### Document Processing Pipeline
 
-   - evaluates the dependency graph for a given Markdown/Darkmatter file.
+1. `init()` - Initialize cache database location
+2. `validate()` - Check dependency graph is acyclic (DAG)
+3. `resolve()` - Walk document tree, resolve DSL nodes, apply caching
+4. `parse()` - Orchestrate multiple files via glob patterns
+5. `toHTML()` - Convert to self-contained HTML with inline assets
 
-4. `resolve(filepath, [state])`
+### Caching Strategy
 
-   - This utility takes in a Markdown-like document (e.g., [DarkMatter DSL](./docs/darkmatter-dsl.md) ) and resolves it's tree (DAG) of reference dependencies to produce an output Markdown document.
-   - It uses the [pulldown-cmark](https://github.com/pulldown-cmark/pulldown-cmark) crate to parse the document identified by the `filepath`:
-     - calls `validate()` to ensure the dependency tree is not circular
-     - resolves the DSL nodes in the input content to the appropriate content (see [Walking the Document Tree](./walking-document-tree.md))
-     - resolving references will use cached results whenever the cache has a 
+- Local markdown: real-time resolution
+- Remote HTTP content: cached 1 day by default (configurable per-reference)
+- LLM operations (summarize, consolidate): cached to avoid recomputation
+- Resource suffixes: `!` = required (error if missing), `?` = optional (silent if missing)
 
-5. `parse(glob[], [state])`
+## Key Documentation
 
-   - This function acts as an orchestrator for all of the files which are in scope
-   - It takes one or more glob patterns and returns a list of all files with the `.md` or `.dm` file extension
-   - This list of files represents the "master documents" and this function then iterates over the documents, using `resolve()` to produce the finalized document structure
+- [DarkMatter DSL](./docs/darkmatter-dsl.md) - Complete DSL specification
+- [Library API](./docs/library-api.md) - Public API surface
+- [LSP Features](./docs/lsp-features.md) - Editor integration features
+- [Document Scope](./docs/doc-scope.md) - Context-aware autocomplete scopes
 
-6. `toHTML(glob)`
+## Project-Local Skills
 
-   - converts a markdown file (or set of files) to HTML (with inline CSS and inline images)
-   - there is a 1:1 relationship between Markdown file and HTML file
-   - the HTML file is intended to be fully self-contained; meaning that the HTML file can be shared and all resources to run the page will be included.
-   - TODO: To address links to other local files, we will need to investigate whether we use some sort of web-archive format, remove the links, or do something else to address this.
-
-## CLI
-
-Provides the command `compose` to the terminal with very simple interface:
-
-SYNTAX: `compose <input-file | glob> --out <dir>`
-WHERE:
-
-- the `--out` switch is optional and if not included the output file or files will be saved to a `./temp` directory off of the current working directory
-- the `--html` switch can be used to convert the output to HTML instead of Markdown
+Skills in `.claude/skills/` provide expert knowledge for key dependencies:
+- `pulldown-cmark` - Markdown parsing with event streams
+- `rust-lsp` - Language server implementation
+- `thiserror`, `color-eyre`, `anyhow` - Error handling patterns
+- `clap` - CLI argument parsing
+- `ropey` - Rope data structure for text editing

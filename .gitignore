@@ -56,3 +56,5 @@ frontend/.vite-ssg-dist/**
 trace/*
 .trace/*
 plans/*
+**/target/*
+

@@ -3,9 +3,27 @@
 ## All Modules
 
 - will use [thiserror](./kb/thiserror.md) for error definition and handling
-- will use []
+- will use [tracing and open telemetry](../.claude/skills/rust-logging/opentelemetry.md) for logging
+- will use **cargo test** for unit testing
+- will use [criterion](./kb/rust-testing.md) for performance testing
+- will use [xxhash-rust](../.claude/skills/xx-hash/rust.md) for hashing (see [hashing](./hashing.md))
 
 
+## Library Module
 
-- we will use [pulldown-cmark](./kb/pulldown-cmark.md) for parsing markdown files and replacing _references_ with resolved content.
-- we will use []
+- we will use [pulldown-cmark](../.claude/skills/pulldown-cmark/SKILL.md) for parsing markdown files and replacing _references_ with resolved content.
+- we will use [markdown-frontmatter](../.claude/skills/rust-frontmatter/SKILL.md) for parsing out the frontmatter properties
+- Smart Image
+    - we will use some combination of the `image`, `zune-image`, and possibly other crates for image optimization (resizing, converting formats, metadata)
+    - we wll combine that with [rayon](../.claude/skills/rayon/SKILL.md) create to concurrently process multiple images at a time.
+
+> **Note:** the library will a [SurrealDB](./database.md) for all state management.
+
+## CLI
+
+- we will use [Clap](../.claude/skills/clap/SKILL.md) as the primary framework for building the CLI
+- we will use either [napi-rs](../.claude/skills/rust-on-npm/napi-rs.md) or [Neon](../.claude/skills/rust-on-npm/neon.md) to package the CLI up and publish to **npm**
+
+## LSP
+
+TODO

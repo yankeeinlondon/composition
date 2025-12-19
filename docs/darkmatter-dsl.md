@@ -2,7 +2,7 @@
 
 ## Functional Goals for the DarkMatter DSL
 
-Darkmatter is a DSL/Language Specification which sits on top of [CommonMark](https://commonmark.org/) markdown (and [GFM](https://github.github.com/gfm/)) and is focused on providing a compact and understandable vocabulary for the *composition* of content together into a master document. This master document -- by default -- is a Markdown document with some inline HTML included for advanced features not supported by the base Markdown specification. 
+Darkmatter is a DSL/Language Specification which sits on top of [CommonMark](https://commonmark.org/) markdown (and [GFM](https://github.github.com/gfm/)) and is focused on providing a compact and understandable vocabulary for the *composition* of content together into a master document. This master document -- by default -- is a Markdown document with some inline HTML included for advanced features not supported by the base Markdown specification.
 
 ### 1. Transclusion
 
@@ -95,7 +95,7 @@ Charting helps people visualize data but unfortunately Markdown doesn't provide 
 - area chart
 - bubble chart
 
-An example of this in DarkMatter might be: 
+An example of this in DarkMatter might be:
 
 ```md
 ## Sales
@@ -105,7 +105,7 @@ An example of this in DarkMatter might be:
 
 ### 7. Popover
 
-The popover effect -- where some part of the page when hovered over or clicked on, presents additional contextual detail for that underlying content -- is supported in **DarkMatter** as an *inline* element or a *block* element. 
+The popover effect -- where some part of the page when hovered over or clicked on, presents additional contextual detail for that underlying content -- is supported in **DarkMatter** as an *inline* element or a *block* element.
 
 #### Inline Popover
 
@@ -161,12 +161,14 @@ Markdown provides a way to add an image to a page with the `![alt text](./image.
     - add `data-{META}` tags to the image for metadata found
     - using one or more metadata properties to assign the `alt-text` property for screen readers, etc.
 
+More details can be found in the [Smart Image](./smart-image.md) specification document.
+
 ### 11. Frontmatter Interpolation
 
-Any frontmatter properties defined on a page can be rendered onto the page with the syntax `{{variable}}`. 
+Any frontmatter properties defined on a page can be rendered onto the page with the syntax `{{variable}}`.
 
 - In addition to the variables explicitly set on the page, some additional properties will be made available to pages for convenience:
-  
+
     - `{{today}}` - today's date in YYYY-MM-DD format
     - `{{yesterday}}` - yesterday's date in YYYY-MM-DD format
     - `{{tomorrow}}` - tomorrow's date in YYYY-MM-DD format
@@ -200,8 +202,8 @@ allowed to name your children.
 
 The `details` definition is terminated/concluded when:
 
-- two blank lines are found back-to-back, 
-- the end of the file is found, 
+- two blank lines are found back-to-back,
+- the end of the file is found,
 - or if the user explicitly ends it with the `::end` operative.
 
 ### 13. Block Columns
@@ -247,18 +249,18 @@ Before we jump into explicit syntax, let's discuss two related topics: **proximi
         - Local *synchronous* HTML files (aka, content of the page is immediately available and not dependent on an embedded Javascript rendering of the content) will also always be real-time when the `compose()` function is called. Using the `watch()` command will have a slight delay but only marginally longer than the like-for-like markdown references.
         - Locally asynchronous HTML files (aka, content which includes a Javascript function which is responsible for rendering the content body) maintains real-time `compose()` compatibility but with the chance of errors being raised rather than the content expected.
     - Eventually Consistent Defaults
-        - Any non-local content over **HTTP** will have a caching layer. 
+        - Any non-local content over **HTTP** will have a caching layer.
             - By default it will be cached for **one day** before another attempt is made to resolve this from the actual source
                 - Both inline and block syntaxes provide a way for a user to override the default interval of one day
             - A hash based check for change detection is performed as soon as the cache window has expired:
                 - if the content is non-reachable for any reason (local machine is offline, the remote location returns an error code other than **404**) then the cache will be used but a warning will be issued and the cache status will remain in a "stale" state
-                - if the remote server returns a **404** then an empty string will interpolated into the calling document but a warning will be provided to the caller to react to. The cache will then be reset to not check for another day. 
-     
+                - if the remote server returns a **404** then an empty string will interpolated into the calling document but a warning will be provided to the caller to react to. The cache will then be reset to not check for another day.
+
      > **Note:** any resource which ends in `!` indicates that the resource is NOT ALLOWED to be empty and will halt execution with an error when this condition is met.
-     
+
      > **Note:** any resource which ends in `?` indicates that the resource is allowed to be absent and that no warning (or error) should be raised when this condition is encountered.
 
-                - 
+                -
 
 ## DSL Syntax
 

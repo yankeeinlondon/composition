@@ -55,6 +55,7 @@
         "rustformers",
         "rustup",
         "safeish",
+        "scrset",
         "serde",
         "Strikethrough",
         "syntect",
