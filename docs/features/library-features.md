@@ -12,7 +12,7 @@ Using the library module starts by calling the `init(dir?, frontmatter?)` functi
 - the return type of the `init()` function is the **Composition API** along with the initial `frontmatter`
 - the frontmatter will be composed of:
     - any recognized ENV variables
-    - all [utility frontmatter]() key/values
+    - all [utility frontmatter](../reference/utility-frontmatter.md) key/values
     - merged with any key/values passed into `init()`
 
 ## Composition API
@@ -74,15 +74,32 @@ The following functions will also be provided back when calling `init()`. They a
     - expects a valid image file or URL reference
     - ensures that the optimized images for this resource are fresh in `${output_dir}/images`
 
-3. `summarize(resource, &frontmatter)`
+3. `summarize(resource, &frontmatter)` ✅ IMPLEMENTED (Phase 6)
 
-    - Leverages AI to summarize content.
-    - the frontmatter reference will give us access to the `summarize_model` property
+    - Leverages AI to summarize content using async LLM providers
+    - Results are cached in SurrealDB with 30-day expiration
+    - The frontmatter reference gives access to the `summarize_model` property
+    - Uses custom `CompletionModel` trait for provider flexibility
+    - **Implementation:** `lib/src/ai/summarize.rs`
 
-4. `consolidate(resource[], &frontmatter)`
+4. `consolidate(resource[], &frontmatter)` ✅ IMPLEMENTED (Phase 6)
 
-    - Leverages AI to consolidate multiple document based resources into a comprehensive whole
-    - will use the frontmatter's `consolidate_model` to choose an [AI model](../reference/models.md)
+    - Leverages AI to consolidate multiple document-based resources into a comprehensive whole
+    - Uses the frontmatter's `consolidate_model` to choose an [AI model](../reference/models.md)
+    - Results cached by combined hash of all input documents
+    - Order-sensitive caching (different order = different result)
+    - **Implementation:** `lib/src/ai/consolidate.rs`
 
-5. `topicExtraction(resource)`
-6. ``
+5. `topicExtraction(topic, resources[], review)` ✅ IMPLEMENTED (Phase 6)
+
+    - Extracts content related to a specific topic from multiple documents
+    - Optional review mode provides analysis of extracted content
+    - Results cached by topic + review flag + input documents
+    - **Implementation:** `lib/src/ai/topic.rs`
+
+6. `generateEmbedding(resource, text)` ✅ IMPLEMENTED (Phase 6)
+
+    - Generates vector embeddings for text content using embedding models
+    - Stores embeddings in SurrealDB with HNSW index support
+    - Supports similarity search via `findSimilar()`
+    - **Implementation:** `lib/src/ai/embedding.rs`

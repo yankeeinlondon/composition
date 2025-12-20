@@ -78,6 +78,7 @@ The project implements the **DarkMatter DSL**, a superset of CommonMark/GFM mark
 ## Project-Local Skills
 
 Skills in `.claude/skills/` provide expert knowledge for key dependencies:
+
 - `pulldown-cmark` - Markdown parsing with event streams
 - `rust-lsp` - Language server implementation
 - `surrealdb` - Database operations
@@ -86,3 +87,12 @@ Skills in `.claude/skills/` provide expert knowledge for key dependencies:
 - `thiserror`, `color-eyre`, `anyhow` - Error handling patterns
 - `clap` - CLI argument parsing
 - `ropey` - Rope data structure for text editing
+- `rig` - Detailed information on using the 'rig' crate
+- `rust-testing` - Detailed knowledge on how to test in Rust
+- `rust-frontmatter` - Detailed information on how to parse and work with frontmatter in Rust programs
+- `gfm` - Detailed information about the GFM standard for Markdown
+- `rust-logging` - how to effectively log in Rust programs
+- `rust-code-highlighting` - detailed information on how to parse code blocks to provide "code highlighting" in Rust programs
+- `rust-on-npm` - detailed information on how to publish your Rust programs to `npm` using crates like napi-rs or Neon
+
+**IMPORTANT:** any work involving AI should always use the "rig" skill!

@@ -58,6 +58,7 @@
         "scrset",
         "serde",
         "Strikethrough",
+        "surrealdb",
         "syntect",
         "tagfilter",
         "TARGETPLATFORM",
