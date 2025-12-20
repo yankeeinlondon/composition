@@ -20,3 +20,6 @@ Based on where the cursor is placed in the document you will end up in one of th
         - `::summarize `
 - `document-list`
     - quite similar to the `document` scope but in this case there are one or more files which can be expressed as a comma-delimited list.
+    - commands which invoke this scope include:
+        - `::consolidate `
+        - `::topic `

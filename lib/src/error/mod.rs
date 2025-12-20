@@ -16,6 +16,9 @@ pub enum CompositionError {
     #[error("AI error: {0}")]
     AI(#[from] AIError),
 
+    #[error("Audio error: {0}")]
+    Audio(#[from] AudioError),
+
     #[error("IO error: {0}")]
     Io(#[from] std::io::Error),
 
@@ -199,5 +202,89 @@ impl From<surrealdb::Error> for CacheError {
 impl From<surrealdb::Error> for CompositionError {
     fn from(err: surrealdb::Error) -> Self {
         CompositionError::Cache(CacheError::from(err))
+    }
+}
+
+/// Errors related to audio processing
+#[derive(Error, Debug)]
+pub enum AudioError {
+    #[error("Failed to read audio file: {path}")]
+    ReadFailed { path: String },
+
+    #[error("Unsupported audio format: {format}")]
+    UnsupportedFormat { format: String },
+
+    #[error("Failed to fetch remote audio: {url}")]
+    FetchFailed { url: String },
+
+    #[error("Failed to extract audio metadata: {reason}")]
+    MetadataFailed { reason: String },
+
+    #[error("Cache operation failed: {0}")]
+    CacheFailed(String),
+
+    #[error("Audio processing error: {0}")]
+    ProcessingError(String),
+
+    #[error("Audio processing failed: {reason}")]
+    ProcessingFailed { reason: String },
+
+    #[error("Invalid audio data: {0}")]
+    InvalidData(String),
+
+    #[error("File too large: {size} bytes (max: {max_size} bytes)")]
+    FileTooLarge { size: u64, max_size: u64 },
+
+    #[error("IO error: {0}")]
+    Io(#[from] std::io::Error),
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn audio_error_display_read_failed() {
+        let err = AudioError::ReadFailed {
+            path: "/path/to/audio.mp3".to_string(),
+        };
+        assert_eq!(err.to_string(), "Failed to read audio file: /path/to/audio.mp3");
+    }
+
+    #[test]
+    fn audio_error_display_unsupported_format() {
+        let err = AudioError::UnsupportedFormat {
+            format: "ogg".to_string(),
+        };
+        assert_eq!(err.to_string(), "Unsupported audio format: ogg");
+    }
+
+    #[test]
+    fn audio_error_display_fetch_failed() {
+        let err = AudioError::FetchFailed {
+            url: "https://example.com/audio.mp3".to_string(),
+        };
+        assert_eq!(err.to_string(), "Failed to fetch remote audio: https://example.com/audio.mp3");
+    }
+
+    #[test]
+    fn audio_error_display_metadata_failed() {
+        let err = AudioError::MetadataFailed {
+            reason: "corrupted file".to_string(),
+        };
+        assert_eq!(err.to_string(), "Failed to extract audio metadata: corrupted file");
+    }
+
+    #[test]
+    fn audio_error_display_cache_failed() {
+        let err = AudioError::CacheFailed("database connection error".to_string());
+        assert_eq!(err.to_string(), "Cache operation failed: database connection error");
+    }
+
+    #[test]
+    fn audio_error_converts_to_composition_error() {
+        let audio_err = AudioError::ProcessingError("test error".to_string());
+        let comp_err: CompositionError = audio_err.into();
+        assert!(matches!(comp_err, CompositionError::Audio(_)));
     }
 }

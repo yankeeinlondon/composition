@@ -57,6 +57,21 @@ DEFINE FIELD created_at ON embedding TYPE datetime DEFAULT time::now();
 -- Note: HNSW vector index syntax varies by SurrealDB version
 -- DEFINE INDEX idx_embedding_vector ON embedding FIELDS vector HNSW DIMENSION 1536 DISTANCE COSINE;
 DEFINE INDEX idx_embedding_resource ON embedding FIELDS resource_hash UNIQUE;
+
+-- Audio metadata cache
+DEFINE TABLE audio_cache SCHEMAFULL;
+DEFINE FIELD resource_hash ON audio_cache TYPE string;
+DEFINE FIELD content_hash ON audio_cache TYPE string;
+DEFINE FIELD created_at ON audio_cache TYPE datetime DEFAULT time::now();
+DEFINE FIELD source_type ON audio_cache TYPE string;
+DEFINE FIELD source ON audio_cache TYPE string;
+DEFINE FIELD format ON audio_cache TYPE string;
+DEFINE FIELD duration_secs ON audio_cache TYPE option<float>;
+DEFINE FIELD bitrate ON audio_cache TYPE option<int>;
+DEFINE FIELD sample_rate ON audio_cache TYPE option<int>;
+DEFINE FIELD channels ON audio_cache TYPE option<int>;
+DEFINE INDEX idx_audio_resource ON audio_cache FIELDS resource_hash UNIQUE;
+DEFINE INDEX idx_audio_lookup ON audio_cache FIELDS resource_hash, content_hash;
 "#;
 
 /// Apply the database schema

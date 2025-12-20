@@ -1,6 +1,6 @@
 # Walking the Document Tree
 
-![Reference Tree Example](reference-tree.png)
+![Reference Tree Example](images/reference-tree.png)
 
 - every master document represents a **root** node in a reference tree.
 - this dependency tree is an acyclic DAG

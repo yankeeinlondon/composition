@@ -222,6 +222,20 @@ In this example:
 - very large display devices (e.g., `xl`) will display this text in three columns
 
 See the [Block Columns](./block-columns.md) specification for more details.
+
+### 14. Audio Content
+
+If a user wants to include Audio content in a document they can use the `::audio <file>` directive to include it. Doing this will embed a small audio player -- using HTML -- which can play and pause the file.
+
+For more details, read [Audio Player](../design/audio-player.md).
+
+
+### 15. YouTube Video Embedding
+
+If a user wants to include an embedding of a YouTube video in their document then they can use the `::youtube <url or id>` directive.
+
+For more details, read [YouTube Embedding](../design/youtube-embedding.md)
+
 ## Caching Semantics
 
 Before we jump into explicit syntax, let's discuss two related topics: **proximity** and **timing:**

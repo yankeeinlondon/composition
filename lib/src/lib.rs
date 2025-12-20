@@ -71,6 +71,7 @@ pub mod types;
 // Implemented feature modules
 pub mod parse;
 pub mod image;
+pub mod audio;
 
 // Placeholder modules for future phases
 pub mod render;
@@ -79,7 +80,7 @@ pub mod ai;
 // Re-exports for convenience
 pub use api::{CompositionApi, CompositionConfig, HtmlOutput, ImageSource, SmartImageOutput};
 pub use error::{
-    AIError, CacheError, CompositionError, ParseError, RenderError, Result,
+    AIError, AudioError, CacheError, CompositionError, ParseError, RenderError, Result,
 };
 pub use init::init;
 pub use types::{
