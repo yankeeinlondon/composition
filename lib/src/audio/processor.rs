@@ -248,7 +248,7 @@ pub(crate) fn process_audio_sync(
     let display_name = input
         .name
         .or_else(|| metadata.title.clone())
-        .unwrap_or_else(|| filename);
+        .unwrap_or(filename);
 
     // Step 11: Return AudioOutput
     let relative_path = format!("audio/{}", output_filename);

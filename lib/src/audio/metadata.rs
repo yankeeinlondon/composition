@@ -128,7 +128,7 @@ pub fn detect_audio_format(
     // Detect format from extension
     let format_from_ext = extension
         .as_deref()
-        .and_then(|ext| AudioFormat::from_extension(ext));
+        .and_then(AudioFormat::from_extension);
 
     // Detect format from magic bytes
     let format_from_magic = detect_format_from_magic_bytes(bytes);

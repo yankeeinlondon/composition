@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use lib::cache::init_database;
 use lib::error::Result;
 use surrealdb::engine::local::Db;

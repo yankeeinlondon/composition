@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use lib::types::{Frontmatter, Resource};
 use std::path::PathBuf;
 use tempfile::TempDir;
