@@ -1,7 +1,7 @@
 use crate::cache::CacheOperations;
-use crate::error::Result;
+use crate::error::{CompositionError, ParseError, RenderError, Result};
 use crate::types::{
-    DependencyGraph, Document, Frontmatter, Resource, WorkPlan,
+    DependencyGraph, Document, Frontmatter, Resource, ResourceHash, ResourceRequirement, ResourceSource, WorkPlan,
 };
 use std::sync::Arc;
 use surrealdb::engine::local::Db;
@@ -185,24 +185,233 @@ impl CompositionApi {
     }
 
     /// Render resources to documents
+    ///
+    /// Orchestrates the complete rendering pipeline for a set of resources:
+    /// 1. Generates an optimized work plan based on dependencies
+    /// 2. Executes the work plan with parallel processing via rayon
+    /// 3. Resolves all transclusions recursively
+    /// 4. Applies frontmatter interpolation
+    /// 5. Returns fully rendered documents
+    ///
+    /// # Arguments
+    ///
+    /// * `resources` - The resources to render
+    /// * `state` - Optional frontmatter state to merge with document frontmatter
+    ///
+    /// # Returns
+    ///
+    /// A vector of rendered `Document`s with all transclusions and interpolations resolved.
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// # use lib::{init, Resource, ResourceSource, ResourceRequirement};
+    /// # use std::path::PathBuf;
+    /// # #[tokio::main]
+    /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// let api = init(None, None).await?;
+    /// let resources = vec![
+    ///     Resource {
+    ///         source: ResourceSource::Local(PathBuf::from("document.md")),
+    ///         requirement: ResourceRequirement::Required,
+    ///         cache_duration: None,
+    ///     },
+    /// ];
+    ///
+    /// let documents = api.render(resources, None).await?;
+    /// println!("Rendered {} documents", documents.len());
+    /// # Ok(())
+    /// # }
+    /// ```
+    #[instrument(skip(self, state), fields(num_resources = resources.len()))]
     pub async fn render(
         &self,
-        _resources: Vec<Resource>,
-        _state: Option<Frontmatter>,
+        resources: Vec<Resource>,
+        state: Option<Frontmatter>,
     ) -> Result<Vec<Document>> {
-        todo!("Implement in Phase 5")
+        info!("Starting render pipeline");
+
+        // 1. Compute hashes of requested resources for filtering later
+        let requested_hashes: std::collections::HashSet<ResourceHash> = resources
+            .iter()
+            .map(|r| {
+                use crate::graph::utils::compute_resource_hash;
+                compute_resource_hash(r)
+            })
+            .collect();
+
+        // 2. Generate work plan
+        let plan = self.generate_workplan(resources).await?;
+
+        // 3. Merge state frontmatter with instance frontmatter
+        let mut merged_frontmatter = self.frontmatter.clone();
+        if let Some(state_fm) = state {
+            merged_frontmatter.merge(state_fm);
+        }
+
+        // 4. Execute work plan (renders all documents including dependencies)
+        let all_documents = crate::render::execute_workplan(
+            &plan,
+            &merged_frontmatter,
+            &self.cache,
+        )
+        .await?;
+
+        // 5. Filter to return only the originally requested documents
+        let filtered_documents: Vec<Document> = all_documents
+            .into_iter()
+            .filter(|doc| {
+                use crate::graph::utils::compute_resource_hash;
+                let doc_hash = compute_resource_hash(&doc.resource);
+                requested_hashes.contains(&doc_hash)
+            })
+            .collect();
+
+        info!("Render pipeline complete. Returned {} of {} documents", filtered_documents.len(), plan.total_tasks);
+        Ok(filtered_documents)
     }
 
     /// Convert markdown to HTML
-    pub async fn to_html(&self, _patterns: Vec<String>) -> Result<Vec<HtmlOutput>> {
-        todo!("Implement in Phase 5")
+    ///
+    /// Renders markdown files matching glob patterns to self-contained HTML output.
+    /// This is the complete pipeline:
+    /// 1. Resolves glob patterns to find matching files
+    /// 2. Renders all documents (including transclusions and AI operations)
+    /// 3. Converts to HTML with inline assets
+    ///
+    /// # Arguments
+    ///
+    /// * `patterns` - Glob patterns to match files (e.g., "*.md", "docs/**/*.md")
+    ///
+    /// # Returns
+    ///
+    /// A vector of `HtmlOutput` with file paths and corresponding HTML content.
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// # use lib::init;
+    /// # #[tokio::main]
+    /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// let api = init(None, None).await?;
+    /// let outputs = api.to_html(vec!["docs/*.md".to_string()]).await?;
+    ///
+    /// for output in outputs {
+    ///     println!("Generated HTML for: {}", output.path.display());
+    /// }
+    /// # Ok(())
+    /// # }
+    /// ```
+    #[instrument(skip(self), fields(num_patterns = patterns.len()))]
+    pub async fn to_html(&self, patterns: Vec<String>) -> Result<Vec<HtmlOutput>> {
+        info!("Converting to HTML");
+
+        // 1. Resolve glob patterns to find files
+        let mut resources = Vec::new();
+        for pattern in &patterns {
+            let matches = glob::glob(pattern)
+                .map_err(|e| CompositionError::Parse(ParseError::InvalidResource(
+                    format!("Invalid glob pattern '{}': {}", pattern, e)
+                )))?;
+
+            for entry in matches {
+                let path = entry.map_err(|e| CompositionError::Io(
+                    std::io::Error::new(std::io::ErrorKind::NotFound, e.to_string())
+                ))?;
+
+                resources.push(Resource {
+                    source: ResourceSource::Local(path),
+                    requirement: ResourceRequirement::Required,
+                    cache_duration: None,
+                });
+            }
+        }
+
+        if resources.is_empty() {
+            info!("No files matched the provided patterns");
+            return Ok(Vec::new());
+        }
+
+        info!("Found {} files to convert", resources.len());
+
+        // 2. Render all documents
+        let documents = self.render(resources, None).await?;
+
+        // 3. Convert each document to HTML
+        let mut outputs = Vec::new();
+        for doc in documents {
+            let html = crate::render::to_html(&doc.content)
+                .map_err(|e| CompositionError::Render(e))?;
+
+            let path = match &doc.resource.source {
+                ResourceSource::Local(p) => p.clone(),
+                ResourceSource::Remote(url) => {
+                    // For remote resources, generate a filename from the URL
+                    let filename = url
+                        .path_segments()
+                        .and_then(|s| s.last())
+                        .unwrap_or("remote.html");
+                    std::path::PathBuf::from(filename)
+                }
+            };
+
+            outputs.push(HtmlOutput { path, html });
+        }
+
+        info!("Generated {} HTML outputs", outputs.len());
+        Ok(outputs)
     }
 
     // ===== Supplemental API Functions =====
 
     /// Transclude a resource
-    pub async fn transclude(&self, _resource: Resource) -> Result<Document> {
-        todo!("Implement in Phase 5")
+    ///
+    /// Loads and resolves a single resource, including all nested transclusions.
+    /// This is a convenience function for working with individual files.
+    ///
+    /// # Arguments
+    ///
+    /// * `resource` - The resource to transclude
+    ///
+    /// # Returns
+    ///
+    /// A fully resolved `Document` with all transclusions expanded.
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// # use lib::{init, Resource, ResourceSource, ResourceRequirement};
+    /// # use std::path::PathBuf;
+    /// # #[tokio::main]
+    /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// let api = init(None, None).await?;
+    /// let resource = Resource {
+    ///     source: ResourceSource::Local(PathBuf::from("document.md")),
+    ///     requirement: ResourceRequirement::Required,
+    ///     cache_duration: None,
+    /// };
+    ///
+    /// let doc = api.transclude(resource).await?;
+    /// println!("Document has {} content nodes", doc.content.len());
+    /// # Ok(())
+    /// # }
+    /// ```
+    #[instrument(skip(self), fields(source = ?resource.source))]
+    pub async fn transclude(&self, resource: Resource) -> Result<Document> {
+        info!("Transcluding resource");
+
+        // Use the render function with a single resource
+        let documents = self.render(vec![resource], None).await?;
+
+        // Return the first (and only) document
+        documents
+            .into_iter()
+            .next()
+            .ok_or_else(|| {
+                CompositionError::Render(RenderError::HtmlGenerationFailed(
+                    "No document produced during transclusion".to_string(),
+                ))
+            })
     }
 
     /// Optimize an image for responsive web delivery

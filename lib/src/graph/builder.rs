@@ -1,6 +1,6 @@
 use crate::error::Result;
 use crate::parse::parse_document;
-use crate::types::{DependencyGraph, Frontmatter, GraphNode, Resource, ResourceHash};
+use crate::types::{DependencyGraph, Frontmatter, GraphNode, Resource, ResourceHash, ResourceSource};
 use futures::future::BoxFuture;
 use std::collections::HashMap;
 use surrealdb::engine::local::Db;
@@ -8,6 +8,46 @@ use surrealdb::Surreal;
 use tracing::{debug, instrument};
 
 use super::utils::{compute_content_hash, compute_resource_hash, load_resource};
+
+/// Resolve a resource's path relative to a parent resource
+fn resolve_relative_resource(dep: &Resource, parent: &Resource) -> Result<Resource> {
+    match (&dep.source, &parent.source) {
+        (ResourceSource::Local(dep_path), ResourceSource::Local(parent_path)) => {
+            // If dependency is relative, resolve it relative to parent's directory
+            if dep_path.is_relative() {
+                let parent_dir = parent_path.parent()
+                    .ok_or_else(|| crate::error::CompositionError::Parse(
+                        crate::error::ParseError::InvalidResource(
+                            format!("Parent resource has no directory: {}", parent_path.display())
+                        )
+                    ))?;
+
+                // Join and normalize the path
+                let mut resolved_path = parent_dir.join(dep_path);
+
+                // Normalize by removing "." components
+                // This converts /temp/./subsection.md to /temp/subsection.md
+                let components: std::path::PathBuf = resolved_path
+                    .components()
+                    .filter(|c| c.as_os_str() != ".")
+                    .collect();
+
+                resolved_path = components;
+
+                Ok(Resource {
+                    source: ResourceSource::Local(resolved_path),
+                    requirement: dep.requirement,
+                    cache_duration: dep.cache_duration,
+                })
+            } else {
+                // Already absolute, use as-is
+                Ok(dep.clone())
+            }
+        }
+        // Remote resources or mixed types - use as-is
+        _ => Ok(dep.clone())
+    }
+}
 
 /// Build a dependency graph starting from a root resource
 ///
@@ -65,7 +105,11 @@ fn visit_resource<'a>(
     // Recursively visit dependencies
     for dep in &document.dependencies {
         debug!("Processing dependency: {:?}", dep.source);
-        let dep_hash = visit_resource(dep, graph, visited, db, frontmatter).await?;
+
+        // Resolve relative paths based on the parent resource's location
+        let resolved_dep = resolve_relative_resource(dep, resource)?;
+
+        let dep_hash = visit_resource(&resolved_dep, graph, visited, db, frontmatter).await?;
         dependency_hashes.push(dep_hash);
 
         // Add edge to graph

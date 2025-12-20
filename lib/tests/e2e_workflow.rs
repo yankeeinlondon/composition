@@ -8,7 +8,6 @@ mod common;
 /// End-to-end workflow test: init -> graph -> render -> toHTML
 /// Tests the complete pipeline with realistic document hierarchy
 #[tokio::test]
-#[ignore = "Requires Phase 5 render() implementation"]
 async fn test_complete_workflow_with_transclusion() -> Result<()> {
     let temp_dir = TempDir::new().unwrap();
     let base_path = temp_dir.path();
@@ -115,7 +114,6 @@ This is a subsection included in chapter 1.
 
 /// Test caching behavior across multiple operations
 #[tokio::test]
-#[ignore = "Requires Phase 5 render() implementation"]
 async fn test_caching_across_operations() -> Result<()> {
     let temp_dir = TempDir::new().unwrap();
     let base_path = temp_dir.path();
@@ -156,7 +154,6 @@ This document should be cached.
 
 /// Test error handling and propagation
 #[tokio::test]
-#[ignore = "Requires Phase 5 render() implementation"]
 async fn test_error_propagation() -> Result<()> {
     let temp_dir = TempDir::new().unwrap();
     let base_path = temp_dir.path();
@@ -198,7 +195,6 @@ async fn test_error_propagation() -> Result<()> {
 
 /// Test frontmatter interpolation across the pipeline
 #[tokio::test]
-#[ignore = "Requires Phase 5 render() implementation"]
 async fn test_frontmatter_interpolation_e2e() -> Result<()> {
     let temp_dir = TempDir::new().unwrap();
     let base_path = temp_dir.path();
@@ -245,7 +241,6 @@ Written by {{author}}, version {{version}}.
 
 /// Test cycle detection in document graph
 #[tokio::test]
-#[ignore = "Requires Phase 5 render() implementation"]
 async fn test_cycle_detection() -> Result<()> {
     let temp_dir = TempDir::new().unwrap();
     let base_path = temp_dir.path();
@@ -295,7 +290,6 @@ async fn test_cycle_detection() -> Result<()> {
 
 /// Test concurrent rendering with rayon
 #[tokio::test]
-#[ignore = "Requires Phase 5 render() implementation"]
 async fn test_concurrent_rendering() -> Result<()> {
     let temp_dir = TempDir::new().unwrap();
     let base_path = temp_dir.path();
@@ -336,7 +330,6 @@ async fn test_concurrent_rendering() -> Result<()> {
 
 /// Test table rendering from inline and external sources
 #[tokio::test]
-#[ignore = "Requires Phase 5 render() implementation"]
 async fn test_table_rendering_e2e() -> Result<()> {
     let temp_dir = TempDir::new().unwrap();
     let base_path = temp_dir.path();
@@ -388,7 +381,6 @@ async fn test_table_rendering_e2e() -> Result<()> {
 
 /// Test workplan optimization with cached resources
 #[tokio::test]
-#[ignore = "Requires Phase 5 render() implementation"]
 async fn test_workplan_optimization() -> Result<()> {
     let temp_dir = TempDir::new().unwrap();
     let base_path = temp_dir.path();

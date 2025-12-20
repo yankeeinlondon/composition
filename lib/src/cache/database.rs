@@ -56,7 +56,14 @@ pub fn locate_database_path(start_dir: Option<&Path>) -> Result<PathBuf> {
         return Ok(git_root.join(".composition.db"));
     }
 
-    // Fall back to home directory
+    // If start_dir was explicitly provided and not in a git repo,
+    // use it directly (useful for tests with temp directories)
+    if start_dir.is_some() {
+        info!("No git repository found, using provided directory");
+        return Ok(start.join(".composition.db"));
+    }
+
+    // Fall back to home directory only if no start_dir was provided
     let home = dirs::home_dir().ok_or_else(|| CacheError::InitializationFailed {
         path: PathBuf::from("~"),
         error: "Could not determine home directory".to_string(),

@@ -2,7 +2,6 @@ use crate::cache::CacheOperations;
 use crate::error::RenderError;
 use crate::parse::parse_document;
 use crate::types::{Document, Frontmatter, Resource, WorkPlan};
-use rayon::prelude::*;
 use std::sync::Arc;
 use tracing::{info, instrument, span, Level};
 
@@ -44,25 +43,30 @@ pub async fn execute_workplan(
         );
 
         if layer.parallelizable && layer.resources.len() > 1 {
-            // Use rayon for parallel processing
-            let layer_results: Result<Vec<Document>, RenderError> = layer
-                .resources
-                .par_iter()
-                .map(|resource| {
-                    // Clone necessary data for parallel processing
-                    let fm = frontmatter.clone();
-                    let cache_ref = Arc::clone(cache);
+            // Use tokio for parallel processing with join_all
+            let mut tasks = Vec::new();
 
-                    // Use tokio runtime for async operations within rayon
-                    tokio::task::block_in_place(|| {
-                        tokio::runtime::Handle::current().block_on(async {
-                            render_document(resource, &fm, &cache_ref).await
-                        })
-                    })
-                })
-                .collect();
+            for resource in &layer.resources {
+                let fm = frontmatter.clone();
+                let cache_ref = Arc::clone(cache);
+                let resource = resource.clone();
 
-            results.extend(layer_results?);
+                let task = tokio::spawn(async move {
+                    render_document(&resource, &fm, &cache_ref).await
+                });
+
+                tasks.push(task);
+            }
+
+            // Wait for all tasks to complete
+            let layer_results = futures::future::join_all(tasks).await;
+
+            // Collect results and handle errors
+            for result in layer_results {
+                let doc = result
+                    .map_err(|e| RenderError::HtmlGenerationFailed(format!("Task join error: {}", e)))??;
+                results.push(doc);
+            }
         } else {
             // Process sequentially
             for resource in &layer.resources {
