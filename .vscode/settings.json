@@ -59,6 +59,7 @@
         "serde",
         "Strikethrough",
         "surrealdb",
+        "surrealql",
         "syntect",
         "tagfilter",
         "TARGETPLATFORM",

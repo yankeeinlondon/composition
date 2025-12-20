@@ -1,5 +1,16 @@
 # Cache Strategy
 
+## **IMPORTANT**
+
+Currently, the dependency graph is built in-memory using Rust's HashMap and topological sorting. The
+database is only used for:
+
+- Persisting nodes and edges
+- Loading single nodes
+- Simple cascade invalidation
+
+
+
 This document details the comprehensive caching strategy implemented in the Composition library module, including dependency graph caching, asset processing caches, and AI operation caches.
 
 ## Overview

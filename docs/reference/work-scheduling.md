@@ -22,4 +22,7 @@ The picture above illustrates the graph based nature of a Darkmatter document.
 
 ## What is Work Scheduling and Why Do We Need It?
 
-
+- to effectively run concurrent workloads with **rayon** we will need to do something which resembles a **topological sort**
+    - we start by checking cache and rendering all _leaf_ nodes in parallel
+    - then we parallelize all nodes in the dependency graph who depend _only_ on the leaf nodes
+    - etc.
