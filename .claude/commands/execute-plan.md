@@ -797,7 +797,7 @@ Phase orchestrators must actively manage context to prevent overflow in large mu
 
 1. **Request summaries from sub-agents, not full file contents:**
    - Sub-agents should return only: status, file paths, key decisions, blockers
-   - Full implementation details go to `.ai/logs/phase-N-details.md`
+   - Full implementation details go to `.ai/logs/YYYY-MM-DD.[planName]-phase-N-details.md`
 
 2. **Use the standard output format:**
    Sub-agents return a structured response with:

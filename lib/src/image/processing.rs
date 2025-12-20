@@ -1,5 +1,5 @@
 use crate::error::{CompositionError, Result};
-use crate::image::BREAKPOINTS;
+use crate::image::{BREAKPOINTS, RETINA_MULTIPLIER};
 use image::{DynamicImage, ImageFormat as ImgFormat, GenericImageView};
 use rayon::prelude::*;
 use std::io::Cursor;
@@ -214,15 +214,28 @@ pub fn process_image(
     let has_transparency = detect_transparency(&img);
     debug!("Transparency detected: {}", has_transparency);
 
-    // Determine which breakpoints to use
+    // Determine which breakpoints to use and generate both 1x and 2x variants
     let max_width = options.max_width.unwrap_or(orig_width);
-    let widths: Vec<u32> = BREAKPOINTS
-        .iter()
-        .map(|(_, w)| *w)
-        .filter(|w| *w <= max_width && *w <= orig_width)
-        .collect();
 
-    debug!("Processing {} breakpoint widths", widths.len());
+    // Generate widths for both 1x and 2x (retina) variants
+    let mut widths: Vec<u32> = Vec::new();
+    for (_, base_width) in BREAKPOINTS.iter() {
+        // 1x variant
+        if *base_width <= max_width && *base_width <= orig_width {
+            widths.push(*base_width);
+        }
+        // 2x variant (retina)
+        let retina_width = base_width * RETINA_MULTIPLIER;
+        if retina_width <= max_width && retina_width <= orig_width {
+            widths.push(retina_width);
+        }
+    }
+
+    // Remove duplicates (e.g., xs and sm are both 640px at 1x)
+    widths.sort_unstable();
+    widths.dedup();
+
+    debug!("Processing {} widths (including retina variants)", widths.len());
 
     // Generate variants in parallel
     let variants: Vec<ImageVariant> = widths
@@ -236,7 +249,7 @@ pub fn process_image(
         .flatten()
         .collect();
 
-    debug!("Generated {} total variants", variants.len());
+    debug!("Generated {} total variants (all formats)", variants.len());
 
     // Generate blur placeholder
     let blur_placeholder = generate_blur_placeholder(&img, 20)?;

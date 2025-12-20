@@ -2,9 +2,40 @@
 
 ## Functional Goals for the DarkMatter DSL
 
-Darkmatter is a DSL/Language Specification which sits on top of [CommonMark](https://commonmark.org/) markdown (and [GFM](https://github.github.com/gfm/)) and is focused on providing a compact and understandable vocabulary for the *composition* of content together into a master document. This master document -- by default -- is a Markdown document with some inline HTML included for advanced features not supported by the base Markdown specification.
+Darkmatter is a DSL/Language Specification which sits on top of [CommonMark](https://commonmark.org/) markdown (and [GFM](https://github.github.com/gfm/)) and is focused on providing a compact and understandable vocabulary for the *composition* of content together into a master document.
 
-### 1. Transclusion
+When a Darkmatter document is parsed goes through a two step process:
+
+1. Document Prep
+2. Core Transforms (including recursive Transclusion)
+
+And at the end of this process the output is a Markdown document (with all Darkmatter DSL operations/directives fully resolved).
+
+### Document Prep DSL Operations
+
+#### 1. Frontmatter Interpolation
+
+Any frontmatter properties defined on a page can be rendered onto the page with the syntax `{{variable}}`.
+
+The details of this feature can be found in the [Frontmatter Interpolation](../design/interpolation.md) spec.
+
+#### 2. Text Replacement
+
+When a page's frontmatter has a `replace` property in the frontmatter it is expected to have a key/value dictionary structure where:
+
+- the *keys* represent text on the page which should be *replaced*
+- the *values* represent the replacement text you would like to use
+
+By default this property is not set which effectively turns off this feature. See [Text Replacement](text-replacement.md) specification for more details.
+
+**Note:** **frontmatter** properties like `replace` or `list_expansion` which have a special semantic meaning in **Darkmatter** are referred to as [`darkmatter`](darkmatter-metadata.md) (non-capitalized)
+
+
+### Core DSL Transforms
+
+> **Note:** whereas the Document Prep stage is always relatively computationally simple and achievable without the cache, this section relies on good [work scheduling](../reference/work-scheduling.md) to ensure that there are as many cache hits as possible.
+
+#### 1. Transclusion
 
 The concept of [Transclusion](https://en.wikipedia.org/wiki/Transclusion) is both simple and equally essential for any document reuse strategy. In essence Transclusion allows a document to be *composed* of various sections which are sourced from external files. This process is meant to be a realtime-*like* relationship such that if **A** *transcludes* **B** to make up it's content then any change to B will be immediately (or near immediately) reflected in **A**.
 
@@ -18,7 +49,7 @@ In Darkmatter this would look something like this:
 
 > **NOTE:** the actual syntax, and various options for it's use will be covered later in the [DSL Syntax](#dsl-syntax) section
 
-### 2. Summarization
+#### 2. Summarization
 
 The ability to inject not the external *document* itself but instead a **summary** of an external document is a powerful feature. This feature will leverage an **LLM*** to produce the summarization and would look something like this in **Darkmatter**:
 
@@ -28,7 +59,7 @@ The document **ABC**, when summarized, is a good example of _less is more_:
 ::summarize ./abc.md
 ```
 
-### 3. Consolidation
+#### 3. Consolidation
 
 At times you will have a set of documents which you want to consolidate into a cohesive whole. This may involve restructuring and/or supplementation of certain sections from one document into another. To achieve this we will leverage an **LLM** to integrate the documents together in a meaningful way. In **Darkmatter** leveraging this feature will look something like:
 
@@ -38,7 +69,7 @@ At times you will have a set of documents which you want to consolidate into a c
 ::consolidate ./abc.md ./def.md
 ```
 
-### 4. Topic Extraction
+#### 4. Topic Extraction
 
 Whereas a **Consolidation** attempts to move the content in the various files provided *in it's entirety* into the master document, a **Topic Consolidation** reviews all the documents provided and looks for information on a specified "topic". That topic is then isolated and the various document's information on the topic are consolidated into prose. In **Darkmatter** this would look something like:
 
@@ -50,11 +81,11 @@ Whereas a **Consolidation** attempts to move the content in the various files pr
 
 You may request a review of the topic document by adding in the `--review` flag.
 
-### 5. Tables
+#### 5. Tables
 
 When you use the [[GFM]] extensions to [[CommonMark]] you are given a means for creating tabular layouts which can be handy but often prove to be unwieldy for many use cases. **Darkmatter** provides an additional set of primitives for creating tables both from inline content as well as external data. Variants of both of the following syntaxes are supported:
 
-#### Inline Content
+##### Using Block Directives
 
 ~~~md
 ## Products
@@ -67,6 +98,7 @@ When you use the [[GFM]] extensions to [[CommonMark]] you are given a means for 
 ```
 ~~~
 
+##### Using Code Block Syntax
 Alternatively you can also use code block syntax if you prefer:
 
 ~~~md
@@ -87,7 +119,7 @@ Alternatively you can also use code block syntax if you prefer:
 ::table ./data.csv --with-heading-row
 ```
 
-### 6. Charting
+#### 6. Charting
 
 Charting helps people visualize data but unfortunately Markdown doesn't provide any out-of-the-box solution for it. **Darkmatter** provides a similar *inline* and *external* means of providing charts. Supported chart types include:
 
@@ -105,29 +137,29 @@ An example of this in DarkMatter might be:
 ::bar-chart ./sales-by-region.csv
 ```
 
-### 7. Popover
+#### 7. Popover
 
 The popover effect -- where some part of the page when hovered over or clicked on, presents additional contextual detail for that underlying content -- is supported in **DarkMatter** as an *inline* element or a *block* element.
 
-#### Inline Popover
+##### Inline Popover
 
 ~~~md
 There I was, there I was, ... in the [jungle](popover:The Jungle is a dangerous place with lots of scary animals).
 ~~~
 
-#### Block Popover
+##### Block Popover
 
 ```md
-::popover ./wolly-mamouth.md
-The wolly mamouth is a fictious creature who likes to hang out with the Loque Nes Monster.
+::popover ./wooly-mammoth.md
+The wooly mammoth is a fictitious creature who likes to hang out with the Loque Nes Monster.
 ::end-popover
 ```
 
 **Note:** In these examples we provide simple examples that do not represent the full capabilities of this feature. There are several options and derivative formats for **Popovers** which will be covered in part in the [DSL Syntax](#dsl-syntax) section as well as in full detail in the [Darkmatter Popover Specification](./popover.md).
 
-### 8. List Expansion
+#### 8. List Expansion
 
-In Markdown you can denote a *list item* by using the `*`, `-`, or `+` character which the are semantically the same but use the character type chosen in the list's output format. When you're rendering a *flat list* with **DarkMatter** nothing changes, however, when you have a structured list of list items and sub-list items it would be nice to:
+In Markdown you can denote a *list item* by using the `*`, `-`, or `+` character which are semantically the same but use the character type chosen in the list's output format. When you're rendering a *flat list* with **DarkMatter** nothing changes, however, when you have a structured list of list items and sub-list items it would be nice to:
 
 1. have the ability expand/compress the sub-items of list items
 2. have some sort of semantics on whether the child elements of a list item should *expanded* to start or *compressed* to start
@@ -138,20 +170,10 @@ In **DarkMatter** we:
 - the "default state" is set by the `list_expansion` frontmatter property on a page but will default to `none` if not set; valid options are:
     - `expanded` | `collapsed` which provide dynamic expand/collapse at runtime by converting list items with sub-items into inline-HTML which supports this feature
     - `none` which turns this feature off entirely
-- there are more controls and options described in the [Darkmatter List Expansion](./list-expansion.md) specification
+- there are more controls and options described in the [Darkmatter List Expansion](../design/list-expansion.md) specification
 
-### 9. Text Replacement
 
-When a page's frontmatter has a `replace` property in the frontmatter it is expected to have a key/value dictionary structure where:
-
-- the *keys* represent text on the page which should be *replaced*
-- the *values* represent the replacement text you would like to use
-
-By default this property is not set which effectively turns off this feature. See [Text Replacement](text-replacement.md) specification for more details.
-
-**Note:** **frontmatter** properties like `replace` or `list_expansion` which have a special semantic meaning in **Darkmatter** are referred to as [`darkmatter`](darkmatter-metadata.md) (non-capitalized)
-
-### 10. Smart Image
+#### 10. Smart Image
 
 Markdown provides a way to add an image to a page with the `![alt text](./image.png)` based syntax but with a **Darkmatter** document you can go further with "smart images". A smart image is an image that will:
 
@@ -165,13 +187,7 @@ Markdown provides a way to add an image to a page with the `![alt text](./image.
 
 More details can be found in the [Smart Image](../design/smart-image.md) specification document.
 
-### 11. Frontmatter Interpolation
 
-Any frontmatter properties defined on a page can be rendered onto the page with the syntax `{{variable}}`.
-
-- In addition to the variables explicitly set on the page, some additional properties will be made available to pages for convenience: see [utility frontmatter](../reference/utility-frontmatter.md)
-
-- Of course if a page *defines* any of these variable names than that will take precedence over these utility defaults
 
 ### 12. Disclosure Blocks
 
@@ -234,10 +250,11 @@ If a user wants to include audio content in a document, they can use the `::audi
 ```
 
 **Parameters:**
+
 - `<source>` - Path to the audio file (MP3 or WAV format). Can be:
-  - Relative path: `./audio/podcast.mp3`
-  - Absolute path: `/Users/name/music/song.wav`
-  - Path with spaces: `"./my audio/file.mp3"` (use quotes)
+    - Relative path: `./audio/podcast.mp3`
+    - Absolute path: `/Users/name/music/song.wav`
+    - Path with spaces: `"./my audio/file.mp3"` (use quotes)
 - `[name]` - Optional custom display name (in quotes if it contains spaces)
 
 **Examples:**
@@ -257,11 +274,12 @@ If a user wants to include audio content in a document, they can use the `::audi
 ```
 
 **Features:**
+
 - **Metadata Extraction:** Automatically extracts duration, bitrate, sample rate, and ID3 tags (title, artist, album)
 - **Caching:** Metadata is cached by content hash to avoid reprocessing unchanged files
 - **Dual Rendering Modes:**
-  - **File Reference** (default): Copies audio file to output directory with hash-based filename
-  - **Inline Mode** (`--inline` flag): Encodes audio as base64 data URI for portable HTML
+    - **File Reference** (default): Copies audio file to output directory with hash-based filename
+    - **Inline Mode** (`--inline` flag): Encodes audio as base64 data URI for portable HTML
 - **Display Priority:** Shows custom name → ID3 title → filename
 
 **Output:**
@@ -286,6 +304,7 @@ The directive generates an HTML5 audio player:
 Default CSS is provided in `lib/assets/audio-player.css`. Override the `.audio-player` class to customize appearance.
 
 **Supported Formats:**
+
 - MP3 (audio/mpeg)
 - WAV (audio/wav)
 
@@ -303,16 +322,17 @@ Embed YouTube videos directly in your documents with an enhanced player that inc
 ```
 
 **Parameters:**
+
 - `<video-reference>` - YouTube video URL or video ID. Supported formats:
-  - Video ID: `dQw4w9WgXcQ` (11-character alphanumeric string with `-` and `_`)
-  - Watch URL: `https://www.youtube.com/watch?v=dQw4w9WgXcQ`
-  - Short URL: `https://youtu.be/dQw4w9WgXcQ`
-  - Embed URL: `https://www.youtube.com/embed/dQw4w9WgXcQ`
-  - /v/ URL: `https://youtube.com/v/dQw4w9WgXcQ`
+    - Video ID: `dQw4w9WgXcQ` (11-character alphanumeric string with `-` and `_`)
+    - Watch URL: `https://www.youtube.com/watch?v=dQw4w9WgXcQ`
+    - Short URL: `https://youtu.be/dQw4w9WgXcQ`
+    - Embed URL: `https://www.youtube.com/embed/dQw4w9WgXcQ`
+    - /v/ URL: `https://youtube.com/v/dQw4w9WgXcQ`
 - `[width]` - Optional width specification (default: `512px`):
-  - Pixels: `800px`
-  - Rems: `32rem`, `32.5rem`
-  - Percentage: `80%` (0-100 range)
+    - Pixels: `800px`
+    - Rems: `32rem`, `32.5rem`
+    - Percentage: `80%` (0-100 range)
 
 **Examples:**
 
@@ -375,6 +395,7 @@ The directive generates self-contained HTML with:
 **Styling:**
 
 The default styles provide:
+
 - Responsive container with custom width
 - 16:9 aspect ratio padding
 - Smooth transitions between states
@@ -382,6 +403,7 @@ The default styles provide:
 - Maximize button hover/focus states
 
 Override CSS classes to customize appearance:
+
 - `.dm-youtube-container` - Main container
 - `.dm-youtube-wrapper` - 16:9 wrapper
 - `.dm-youtube-player` - iframe element
@@ -425,6 +447,7 @@ Invalid inputs produce user-friendly error messages:
 **CSP Considerations:**
 
 If your site uses Content Security Policy (CSP), you may need to adjust headers to allow:
+
 - `frame-src https://www.youtube.com`
 - `script-src https://www.youtube.com` (for IFrame API)
 

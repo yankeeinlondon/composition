@@ -92,8 +92,8 @@ pub fn generate_columns_styles(breakpoints: &HashMap<Breakpoint, u32>) -> String
     for (i, (bp, cols)) in breakpoint_list.iter().enumerate() {
         let bp_px = breakpoint_pixels(bp);
 
-        if i == 0 && **bp == Breakpoint::Xs {
-            // Base styles (no media query for xs)
+        if i == 0 && **bp == Breakpoint::Micro {
+            // Base styles (no media query for micro - mobile-first)
             styles.push_str(&format!(
                 r#"
 .{} {{
@@ -156,6 +156,7 @@ fn escape_html(text: &str) -> String {
 
 fn breakpoint_name(bp: &Breakpoint) -> &'static str {
     match bp {
+        Breakpoint::Micro => "micro",
         Breakpoint::Xs => "xs",
         Breakpoint::Sm => "sm",
         Breakpoint::Md => "md",
@@ -167,7 +168,8 @@ fn breakpoint_name(bp: &Breakpoint) -> &'static str {
 
 fn breakpoint_pixels(bp: &Breakpoint) -> u32 {
     match bp {
-        Breakpoint::Xs => 0,
+        Breakpoint::Micro => 320,
+        Breakpoint::Xs => 640,
         Breakpoint::Sm => 640,
         Breakpoint::Md => 768,
         Breakpoint::Lg => 1024,
@@ -178,12 +180,13 @@ fn breakpoint_pixels(bp: &Breakpoint) -> u32 {
 
 fn breakpoint_order(bp: &Breakpoint) -> u8 {
     match bp {
-        Breakpoint::Xs => 0,
-        Breakpoint::Sm => 1,
-        Breakpoint::Md => 2,
-        Breakpoint::Lg => 3,
-        Breakpoint::Xl => 4,
-        Breakpoint::Xxl => 5,
+        Breakpoint::Micro => 0,
+        Breakpoint::Xs => 1,
+        Breakpoint::Sm => 2,
+        Breakpoint::Md => 3,
+        Breakpoint::Lg => 4,
+        Breakpoint::Xl => 5,
+        Breakpoint::Xxl => 6,
     }
 }
 
@@ -275,7 +278,8 @@ mod tests {
 
     #[test]
     fn test_breakpoint_pixels() {
-        assert_eq!(breakpoint_pixels(&Breakpoint::Xs), 0);
+        assert_eq!(breakpoint_pixels(&Breakpoint::Micro), 320);
+        assert_eq!(breakpoint_pixels(&Breakpoint::Xs), 640);
         assert_eq!(breakpoint_pixels(&Breakpoint::Sm), 640);
         assert_eq!(breakpoint_pixels(&Breakpoint::Md), 768);
         assert_eq!(breakpoint_pixels(&Breakpoint::Lg), 1024);

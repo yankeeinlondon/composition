@@ -18,7 +18,7 @@ To understand how we plan to hook into an existing implementation of a Markdown 
     When a user is in an `unscoped` [document scope](../reference/doc-scope.md) and the type `{{` a list of frontmatter variables are provided as list. These variables include:
         - any **state** which was passed in during parsing,
         - any key/values defined on the page or from parent pages passed down to the given page.
-        - the utility variables defined in the [interpolation](./darkmatter-dsl.md#11-frontmatter-interpolation) section of the DSL definition
+        - the utility variables defined in [utility frontmatter](../reference/utility-frontmatter.md)
 
 3. Interpolation Styling.
 

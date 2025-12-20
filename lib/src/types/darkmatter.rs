@@ -110,12 +110,13 @@ pub struct DataPoint {
 /// Responsive breakpoints (Tailwind-based)
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Breakpoint {
-    Xs,  // 0px
-    Sm,  // 640px
-    Md,  // 768px
-    Lg,  // 1024px
-    Xl,  // 1280px
-    Xxl, // 1536px
+    Micro, // 320px - mobile portrait
+    Xs,    // 640px - mobile landscape (matches sm)
+    Sm,    // 640px
+    Md,    // 768px
+    Lg,    // 1024px
+    Xl,    // 1280px
+    Xxl,   // 1536px
 }
 
 /// Markdown content wrapper

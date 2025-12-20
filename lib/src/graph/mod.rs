@@ -3,6 +3,7 @@ mod cycles;
 mod workplan;
 mod cache;
 pub mod utils;
+pub mod gitignore;
 
 pub use builder::build_graph;
 pub use cycles::detect_cycles;

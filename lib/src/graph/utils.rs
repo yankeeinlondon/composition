@@ -1,5 +1,6 @@
 use crate::error::{ParseError, Result};
 use crate::types::{Resource, ResourceHash, ResourceSource};
+use std::path::{Path, PathBuf};
 use tracing::{debug, instrument};
 use xxhash_rust::xxh3::xxh3_64;
 
@@ -27,6 +28,19 @@ pub async fn load_resource(resource: &Resource) -> Result<String> {
         ResourceSource::Local(path) => {
             debug!("Loading local file: {}", path.display());
 
+            // Check if file is ignored by .gitignore
+            // Determine project root: walk up from file path to find .git directory
+            let project_root = find_project_root(path);
+            if let Some(root) = project_root {
+                if crate::graph::gitignore::is_ignored(path, &root)? {
+                    return Err(crate::error::CompositionError::Parse(
+                        ParseError::FileIgnored {
+                            path: path.to_string_lossy().to_string(),
+                        },
+                    ));
+                }
+            }
+
             std::fs::read_to_string(path).map_err(|e| {
                 crate::error::CompositionError::Parse(ParseError::ResourceNotFound {
                     path: path.to_string_lossy().to_string(),
@@ -41,6 +55,39 @@ pub async fn load_resource(resource: &Resource) -> Result<String> {
             Err(crate::error::CompositionError::Parse(ParseError::UnsupportedFeature(
                 format!("Remote resource loading not yet implemented: {}", url)
             )))
+        }
+    }
+}
+
+/// Find the project root by walking up from a path looking for .git directory
+///
+/// # Arguments
+///
+/// * `path` - Starting path (file or directory)
+///
+/// # Returns
+///
+/// * `Some(PathBuf)` - Path to project root (directory containing .git)
+/// * `None` - No .git directory found
+fn find_project_root(path: &Path) -> Option<PathBuf> {
+    let mut current = path.to_path_buf();
+
+    // If path is a file, start from its parent directory
+    if current.is_file() {
+        current = current.parent()?.to_path_buf();
+    }
+
+    loop {
+        // Check if .git exists in current directory
+        let git_dir = current.join(".git");
+        if git_dir.exists() {
+            return Some(current);
+        }
+
+        // Move to parent directory
+        match current.parent() {
+            Some(parent) => current = parent.to_path_buf(),
+            None => return None, // Reached filesystem root
         }
     }
 }

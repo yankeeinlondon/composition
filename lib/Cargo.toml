@@ -21,6 +21,8 @@ chrono = { version = "0.4", features = ["serde"] }
 url = "2"
 tracing = "0.1"
 dirs = "5"
+ignore = "0.4"
+lazy_static = "1.4"
 
 # Phase 2 Additional Dependencies
 yaml-rust2 = "0.10"

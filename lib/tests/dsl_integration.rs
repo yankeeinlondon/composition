@@ -279,7 +279,7 @@ fn test_columns_basic() {
 #[test]
 fn test_columns_with_breakpoints() {
     let mut breakpoints = HashMap::new();
-    breakpoints.insert(Breakpoint::Xs, 1);
+    breakpoints.insert(Breakpoint::Micro, 1);
     breakpoints.insert(Breakpoint::Md, 2);
     breakpoints.insert(Breakpoint::Lg, 3);
 
@@ -384,12 +384,13 @@ fn test_nested_disclosure_in_columns() {
 fn test_responsive_breakpoint_order() {
     let mut breakpoints = HashMap::new();
     // Insert in random order
-    breakpoints.insert(Breakpoint::Xxl, 6);
-    breakpoints.insert(Breakpoint::Xs, 1);
-    breakpoints.insert(Breakpoint::Lg, 4);
-    breakpoints.insert(Breakpoint::Md, 3);
-    breakpoints.insert(Breakpoint::Sm, 2);
-    breakpoints.insert(Breakpoint::Xl, 5);
+    breakpoints.insert(Breakpoint::Xxl, 7);
+    breakpoints.insert(Breakpoint::Micro, 1);
+    breakpoints.insert(Breakpoint::Xs, 2);
+    breakpoints.insert(Breakpoint::Lg, 5);
+    breakpoints.insert(Breakpoint::Md, 4);
+    breakpoints.insert(Breakpoint::Sm, 3);
+    breakpoints.insert(Breakpoint::Xl, 6);
 
     let sections = vec![vec![DarkMatterNode::Text("Test".to_string())]];
     let result = render_columns(&breakpoints, &sections).unwrap();

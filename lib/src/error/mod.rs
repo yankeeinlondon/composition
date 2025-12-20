@@ -50,6 +50,9 @@ pub enum ParseError {
     #[error("Resource not found at {path}: {error}")]
     ResourceNotFound { path: String, error: String },
 
+    #[error("File ignored by .gitignore: {path}")]
+    FileIgnored { path: String },
+
     #[error("Unsupported feature: {0}")]
     UnsupportedFeature(String),
 

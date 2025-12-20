@@ -58,7 +58,7 @@ lsp-types = "0.95"
 tokio = { version = "1", features = ["full"] }
 
 # Markdown Parsing (from library module)
-pulldown-cmark = "0.10"
+pulldown-cmark = "0.13"
 
 # Text Buffer Management
 ropey = "1.6"
