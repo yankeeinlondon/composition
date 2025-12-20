@@ -120,7 +120,7 @@ fn escape_html(text: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::Frontmatter;
+    
 
     #[test]
     fn test_render_markdown_simple() {

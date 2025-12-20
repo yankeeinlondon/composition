@@ -17,23 +17,21 @@ pub fn detect_cycles(graph: &DependencyGraph) -> Result<()> {
     // Build adjacency map for efficient lookups
     let mut adjacency: HashMap<ResourceHash, Vec<ResourceHash>> = HashMap::new();
     for (from, to) in &graph.edges {
-        adjacency.entry(*from).or_insert_with(Vec::new).push(*to);
+        adjacency.entry(*from).or_default().push(*to);
     }
 
     // Try DFS from each unvisited node
     for &hash in graph.nodes.keys() {
         if !visited.contains(&hash) {
             let mut path = Vec::new();
-            if let Err(cycle_path) = dfs(
+            dfs(
                 hash,
                 &adjacency,
                 &mut visiting,
                 &mut visited,
                 &mut path,
                 graph,
-            ) {
-                return Err(cycle_path);
-            }
+            )?
         }
     }
 

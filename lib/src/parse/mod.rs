@@ -56,10 +56,11 @@ fn collect_dependencies(nodes: &[DarkMatterNode]) -> Vec<Resource> {
             DarkMatterNode::Topic { resources, .. } => {
                 deps.extend(resources.clone());
             }
-            DarkMatterNode::Table { source, .. } => {
-                if let crate::types::TableSource::External(resource) = source {
-                    deps.push(resource.clone());
-                }
+            DarkMatterNode::Table { source: crate::types::TableSource::External(resource), .. } => {
+                deps.push(resource.clone());
+            }
+            DarkMatterNode::Table { .. } => {
+                // Inline table, no external dependencies
             }
             DarkMatterNode::BarChart { data } |
             DarkMatterNode::LineChart { data } |

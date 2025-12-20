@@ -1,7 +1,5 @@
 use lib::*;
-use std::path::PathBuf;
 use tempfile::TempDir;
-use tokio;
 
 mod common;
 
@@ -86,7 +84,7 @@ This is a subsection included in chapter 1.
 
     // Test workplan generation
     let workplan = api.generate_workplan(vec![resource.clone()]).await?;
-    assert!(workplan.layers.len() > 0);
+    assert!(!workplan.layers.is_empty());
     assert!(workplan.total_tasks > 0);
 
     // Test rendering
@@ -216,7 +214,7 @@ Written by {{author}}, version {{version}}.
 
     let api = init(Some(base_path), None).await?;
 
-    let resource = Resource {
+    let _resource = Resource {
         source: ResourceSource::Local(base_path.join("interpolated.md")),
         requirement: ResourceRequirement::Required,
         cache_duration: None,
@@ -321,8 +319,8 @@ async fn test_concurrent_rendering() -> Result<()> {
     assert_eq!(rendered.len(), 10);
 
     // Verify all documents were rendered
-    for (i, doc) in rendered.iter().enumerate() {
-        assert!(doc.content.len() > 0);
+    for doc in rendered.iter() {
+        assert!(!doc.content.is_empty());
     }
 
     Ok(())
@@ -413,7 +411,7 @@ async fn test_workplan_optimization() -> Result<()> {
     let workplan = api.generate_workplan(vec![resource.clone()]).await?;
 
     // Workplan should be optimized (exact behavior depends on implementation)
-    assert!(workplan.layers.len() > 0);
+    assert!(!workplan.layers.is_empty());
 
     Ok(())
 }

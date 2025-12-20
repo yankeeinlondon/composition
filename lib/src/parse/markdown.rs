@@ -5,6 +5,54 @@ use pulldown_cmark::{Event, Options, Parser, Tag, TagEnd};
 
 /// Parse markdown content with GFM extensions
 pub fn parse_markdown(content: &str) -> Result<Vec<DarkMatterNode>, ParseError> {
+    // Split content into lines and process directives separately
+    let mut nodes = Vec::new();
+    let mut markdown_buffer = String::new();
+    let mut line_num = 1;
+
+    for line in content.lines() {
+        let trimmed = line.trim();
+
+        // Check if this is a DarkMatter directive
+        if trimmed.starts_with("::") {
+            // Flush any accumulated markdown first
+            if !markdown_buffer.is_empty() {
+                nodes.push(DarkMatterNode::Markdown(MarkdownContent {
+                    raw: markdown_buffer.clone(),
+                    frontmatter: None,
+                }));
+                markdown_buffer.clear();
+            }
+
+            // Parse the directive
+            if let Some(node) = parse_directive(trimmed, line_num)? {
+                nodes.push(node);
+            }
+        } else {
+            // Accumulate markdown content
+            if !markdown_buffer.is_empty() {
+                markdown_buffer.push('\n');
+            }
+            markdown_buffer.push_str(line);
+        }
+
+        line_num += 1;
+    }
+
+    // Flush any remaining markdown
+    if !markdown_buffer.is_empty() {
+        nodes.push(DarkMatterNode::Markdown(MarkdownContent {
+            raw: markdown_buffer,
+            frontmatter: None,
+        }));
+    }
+
+    Ok(nodes)
+}
+
+/// Parse markdown content with GFM extensions (old detailed parser - keeping for reference)
+#[allow(dead_code)]
+fn parse_markdown_detailed(content: &str) -> Result<Vec<DarkMatterNode>, ParseError> {
     let mut options = Options::empty();
     options.insert(Options::ENABLE_TABLES);
     options.insert(Options::ENABLE_STRIKETHROUGH);
@@ -34,9 +82,11 @@ pub fn parse_markdown(content: &str) -> Result<Vec<DarkMatterNode>, ParseError> 
                         nodes.push(node);
                     }
                 } else if !current_text.is_empty() {
-                    // Process inline syntax (interpolations, popovers, etc.)
-                    let inline_nodes = process_inline_syntax(&current_text);
-                    nodes.extend(inline_nodes);
+                    // Keep as markdown content
+                    nodes.push(DarkMatterNode::Markdown(MarkdownContent {
+                        raw: current_text.clone(),
+                        frontmatter: None,
+                    }));
                 }
 
                 current_text.clear();
@@ -110,8 +160,9 @@ pub fn parse_markdown(content: &str) -> Result<Vec<DarkMatterNode>, ParseError> 
 
             Event::End(TagEnd::Heading(_)) => {
                 if !current_text.is_empty() {
-                    // Store heading as markdown content
-                    nodes.push(DarkMatterNode::Text(current_text.clone()));
+                    // Process inline syntax in heading text (for interpolations, etc.)
+                    let inline_nodes = process_inline_syntax(&current_text);
+                    nodes.extend(inline_nodes);
                     current_text.clear();
                 }
             }

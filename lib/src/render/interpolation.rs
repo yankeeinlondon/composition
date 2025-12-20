@@ -32,7 +32,7 @@ pub fn process_interpolation(content: &str, frontmatter: &Frontmatter) -> Result
                 _ => {
                     // For complex values (arrays, objects), use JSON representation
                     serde_json::to_string(value)
-                        .map_err(|e| RenderError::InterpolationFailed {
+                        .map_err(|_e| RenderError::InterpolationFailed {
                             variable: var_name.to_string(),
                         })?
                 }

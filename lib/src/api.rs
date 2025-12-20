@@ -341,7 +341,7 @@ impl CompositionApi {
         let mut outputs = Vec::new();
         for doc in documents {
             let html = crate::render::to_html(&doc.content)
-                .map_err(|e| CompositionError::Render(e))?;
+                .map_err(CompositionError::Render)?;
 
             let path = match &doc.resource.source {
                 ResourceSource::Local(p) => p.clone(),

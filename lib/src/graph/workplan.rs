@@ -26,13 +26,13 @@ pub fn generate_workplan(graph: &DependencyGraph) -> Result<WorkPlan> {
     // Initialize all nodes with in-degree 0
     for &hash in graph.nodes.keys() {
         in_degree.entry(hash).or_insert(0);
-        adjacency.entry(hash).or_insert_with(Vec::new);
+        adjacency.entry(hash).or_default();
     }
 
     // Count in-degrees from edges
     for &(from, to) in &graph.edges {
         *in_degree.entry(to).or_insert(0) += 1;
-        adjacency.entry(from).or_insert_with(Vec::new).push(to);
+        adjacency.entry(from).or_default().push(to);
     }
 
     let mut plan = WorkPlan::new();

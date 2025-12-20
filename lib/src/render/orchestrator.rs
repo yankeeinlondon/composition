@@ -179,7 +179,7 @@ fn extract_base_path(resource: &Resource) -> Option<&std::path::PathBuf> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::{ResourceSource, WorkLayer};
+    use crate::types::ResourceSource;
     use std::path::PathBuf;
 
     #[test]

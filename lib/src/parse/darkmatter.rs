@@ -22,7 +22,7 @@ static TOPIC_DIRECTIVE: LazyLock<Regex> = LazyLock::new(|| {
 });
 
 static TABLE_DIRECTIVE: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"^::table(?:\s+(.+?))?(?:\s+--with-heading-row)?$").unwrap()
+    Regex::new(r"^::table\s+(.+)$").unwrap()
 });
 
 static CHART_DIRECTIVE: LazyLock<Regex> = LazyLock::new(|| {
@@ -108,8 +108,16 @@ pub fn parse_directive(line: &str, line_num: usize) -> Result<Option<DarkMatterN
     if let Some(caps) = TABLE_DIRECTIVE.captures(trimmed) {
         let has_heading = trimmed.contains("--with-heading-row");
 
-        let source = if let Some(path_match) = caps.get(1) {
-            let resource = parse_resource(path_match.as_str())?;
+        let args = caps.get(1).map(|m| m.as_str()).unwrap_or("");
+
+        // Remove --with-heading-row flag from args to get the path
+        let path_str = args
+            .replace("--with-heading-row", "")
+            .trim()
+            .to_string();
+
+        let source = if !path_str.is_empty() {
+            let resource = parse_resource(&path_str)?;
             crate::types::TableSource::External(resource)
         } else {
             // Inline table - will be populated later when parsing table content
@@ -306,6 +314,19 @@ mod tests {
     #[test]
     fn test_parse_table_directive() {
         let node = parse_directive("::table ./data.csv --with-heading-row", 1).unwrap().unwrap();
+
+        match node {
+            DarkMatterNode::Table { source, has_heading } => {
+                assert!(matches!(source, crate::types::TableSource::External(_)));
+                assert!(has_heading);
+            }
+            _ => panic!("Expected Table node"),
+        }
+    }
+
+    #[test]
+    fn test_parse_table_directive_flag_first() {
+        let node = parse_directive("::table --with-heading-row ./data.csv", 1).unwrap().unwrap();
 
         match node {
             DarkMatterNode::Table { source, has_heading } => {

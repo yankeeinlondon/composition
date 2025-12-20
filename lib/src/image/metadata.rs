@@ -129,15 +129,19 @@ mod tests {
 
     #[test]
     fn test_to_alt_text_from_description() {
-        let mut metadata = ImageMetadata::default();
-        metadata.description = Some("A beautiful sunset".to_string());
+        let metadata = ImageMetadata {
+            description: Some("A beautiful sunset".to_string()),
+            ..Default::default()
+        };
         assert_eq!(metadata.to_alt_text(), Some("A beautiful sunset".to_string()));
     }
 
     #[test]
     fn test_to_alt_text_from_keywords() {
-        let mut metadata = ImageMetadata::default();
-        metadata.keywords = vec!["sunset".to_string(), "beach".to_string()];
+        let metadata = ImageMetadata {
+            keywords: vec!["sunset".to_string(), "beach".to_string()],
+            ..Default::default()
+        };
         assert_eq!(metadata.to_alt_text(), Some("sunset, beach".to_string()));
     }
 

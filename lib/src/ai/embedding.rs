@@ -38,7 +38,7 @@ impl From<EmbeddingEntryInternal> for EmbeddingEntry {
             content_hash: internal.content_hash,
             model: internal.model,
             vector: internal.vector,
-            created_at: chrono::DateTime::from(internal.created_at.0),
+            created_at: internal.created_at.0,
         }
     }
 }
@@ -174,7 +174,7 @@ pub async fn find_similar(
     };
 
     let mut result = db
-        .query(&format!(
+        .query(format!(
             r#"
             SELECT *, vector::similarity::cosine(vector, $query) AS score
             FROM embedding

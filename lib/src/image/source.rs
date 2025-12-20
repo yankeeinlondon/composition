@@ -2,6 +2,7 @@ use crate::error::{CompositionError, Result};
 use image::DynamicImage;
 use std::path::{Path, PathBuf};
 use std::fs;
+use std::str::FromStr;
 
 /// Source of an image (local file or remote URL)
 #[derive(Debug, Clone)]
@@ -10,15 +11,19 @@ pub enum ImageSource {
     Remote(String),
 }
 
-impl ImageSource {
-    /// Create from a string (auto-detect local vs remote)
-    pub fn from_str(s: &str) -> Self {
+impl FromStr for ImageSource {
+    type Err = std::convert::Infallible;
+
+    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
         if s.starts_with("http://") || s.starts_with("https://") {
-            ImageSource::Remote(s.to_string())
+            Ok(ImageSource::Remote(s.to_string()))
         } else {
-            ImageSource::Local(PathBuf::from(s))
+            Ok(ImageSource::Local(PathBuf::from(s)))
         }
     }
+}
+
+impl ImageSource {
 
     /// Get the string representation
     pub fn as_str(&self) -> &str {
@@ -46,7 +51,7 @@ fn load_local_image(path: &Path) -> Result<DynamicImage> {
         )));
     }
 
-    let bytes = fs::read(path).map_err(|e| CompositionError::Io(e))?;
+    let bytes = fs::read(path).map_err(CompositionError::Io)?;
 
     image::load_from_memory(&bytes).map_err(|e| {
         CompositionError::Render(crate::error::RenderError::ImageProcessing(
@@ -91,13 +96,13 @@ mod tests {
 
     #[test]
     fn test_image_source_from_str_url() {
-        let source = ImageSource::from_str("https://example.com/image.jpg");
+        let source = "https://example.com/image.jpg".parse::<ImageSource>().unwrap();
         assert!(matches!(source, ImageSource::Remote(_)));
     }
 
     #[test]
     fn test_image_source_from_str_local() {
-        let source = ImageSource::from_str("/path/to/image.jpg");
+        let source = "/path/to/image.jpg".parse::<ImageSource>().unwrap();
         assert!(matches!(source, ImageSource::Local(_)));
     }
 

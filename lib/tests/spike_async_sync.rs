@@ -171,7 +171,7 @@ async fn test_heavy_concurrent_load() -> Result<(), Box<dyn std::error::Error>> 
     }
 
     // Wait for all tasks
-    let results: Vec<_> = futures::future::try_join_all(handles).await?;
+    let _results: Vec<_> = futures::future::try_join_all(handles).await?;
 
     let duration = start.elapsed();
     let total_items = processed_count.load(Ordering::SeqCst);

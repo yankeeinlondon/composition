@@ -1,7 +1,8 @@
 mod common;
 
 use chrono::Utc;
-use common::*;
+use common::fixtures::{temp_dir, test_frontmatter, test_local_resource};
+use common::helpers::{compute_test_hash, init_test_db};
 use lib::cache::{apply_schema, DocumentCacheEntry, ImageCacheEntry, LlmCacheEntry};
 use lib::init;
 
@@ -150,7 +151,7 @@ async fn test_image_cache_operations() {
     assert!(retrieved.is_some());
     let retrieved = retrieved.unwrap();
     assert_eq!(retrieved.resource_hash, entry.resource_hash);
-    assert_eq!(retrieved.has_transparency, true);
+    assert!(retrieved.has_transparency);
     assert_eq!(retrieved.original_width, 1920);
 }
 

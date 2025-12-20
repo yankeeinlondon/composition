@@ -4,6 +4,7 @@ use std::collections::HashMap;
 
 /// Layout mode for responsive images
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Default)]
 pub enum LayoutMode {
     /// Full width of container
     FullWidth,
@@ -12,14 +13,10 @@ pub enum LayoutMode {
     /// Percentage of container width
     Percentage(u8),
     /// Auto-detect based on image dimensions
+    #[default]
     Auto,
 }
 
-impl Default for LayoutMode {
-    fn default() -> Self {
-        LayoutMode::Auto
-    }
-}
 
 /// Options for HTML generation
 #[derive(Debug, Clone)]

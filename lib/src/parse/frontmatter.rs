@@ -24,8 +24,7 @@ pub fn extract_frontmatter(content: &str) -> Result<(Frontmatter, &str), ParseEr
     let remaining = &content[yaml_start..];
 
     // Check if closing --- is at the very start (empty frontmatter)
-    if remaining.starts_with("---\n") {
-        let body = &remaining[4..]; // Skip ---\n
+    if let Some(body) = remaining.strip_prefix("---\n") {
         return Ok((Frontmatter::default(), body));
     }
 

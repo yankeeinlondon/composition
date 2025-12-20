@@ -258,7 +258,7 @@ fn extract_data_points(data: &ChartData) -> Result<Vec<DataPoint>, RenderError> 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::collections::HashMap;
+    
 
     fn sample_data() -> Vec<DataPoint> {
         vec![

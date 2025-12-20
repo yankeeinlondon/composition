@@ -13,7 +13,7 @@ fn to_surreal_datetime(dt: DateTime<Utc>) -> SurrealDatetime {
 
 /// Convert SurrealDB Datetime to chrono DateTime
 fn from_surreal_datetime(dt: &SurrealDatetime) -> DateTime<Utc> {
-    DateTime::from(dt.0)
+    dt.0
 }
 
 /// Document cache entry (internal representation using SurrealDB types)

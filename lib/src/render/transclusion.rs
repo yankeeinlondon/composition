@@ -7,6 +7,7 @@ use std::path::PathBuf;
 use std::pin::Pin;
 use std::future::Future;
 use tracing::instrument;
+use csv;
 
 /// Resolve a resource path relative to a base path
 fn resolve_resource_path(
@@ -59,11 +60,12 @@ fn resolve_resource_path(
 /// 3. Applies line range filtering if specified
 /// 4. Parses the transcluded content as a DarkMatter document
 /// 5. Recursively resolves nested transclusions
-#[instrument(skip(cache, frontmatter))]
+/// 6. Resolves external table sources to inline tables
+#[instrument(skip(_cache, _frontmatter))]
 pub fn resolve_transclusion<'a>(
     node: &'a DarkMatterNode,
-    frontmatter: &'a Frontmatter,
-    cache: &'a CacheOperations,
+    _frontmatter: &'a Frontmatter,
+    _cache: &'a CacheOperations,
     base_path: Option<&'a PathBuf>,
 ) -> Pin<Box<dyn Future<Output = Result<Vec<DarkMatterNode>, RenderError>> + Send + 'a>> {
     Box::pin(async move {
@@ -73,7 +75,7 @@ pub fn resolve_transclusion<'a>(
             let resolved_resource = resolve_resource_path(resource, base_path)?;
 
             // 2. Load resource content using the resolved path
-            let content = load_resource(&resolved_resource, cache, None).await?;
+            let content = load_resource(&resolved_resource, _cache, None).await?;
 
             // 3. Apply line range if specified
             let content = apply_line_range(&content, range)?;
@@ -89,7 +91,7 @@ pub fn resolve_transclusion<'a>(
                 let resolved_children = resolve_transclusion(
                     child,
                     &doc.frontmatter,
-                    cache,
+                    _cache,
                     extract_base_path(&resolved_resource),
                 )
                 .await?;
@@ -97,6 +99,30 @@ pub fn resolve_transclusion<'a>(
             }
 
             Ok(resolved)
+        }
+        DarkMatterNode::Table { source, has_heading } => {
+            // Resolve external table sources to inline tables
+            use crate::types::TableSource;
+
+            match source {
+                TableSource::External(resource) => {
+                    // Resolve the resource path if relative
+                    let resolved_resource = resolve_resource_path(resource, base_path)?;
+
+                    // Load and parse CSV
+                    let csv_data = load_csv_data(&resolved_resource).await?;
+
+                    // Return as inline table
+                    Ok(vec![DarkMatterNode::Table {
+                        source: TableSource::Inline(csv_data),
+                        has_heading: *has_heading,
+                    }])
+                }
+                TableSource::Inline(_) => {
+                    // Already inline, pass through
+                    Ok(vec![node.clone()])
+                }
+            }
         }
         // Pass through other nodes unchanged
         other => Ok(vec![other.clone()]),
@@ -107,7 +133,7 @@ pub fn resolve_transclusion<'a>(
 /// Load resource content from filesystem or cache
 async fn load_resource(
     resource: &Resource,
-    cache: &CacheOperations,
+    _cache: &CacheOperations,
     base_path: Option<&PathBuf>,
 ) -> Result<String, RenderError> {
     match &resource.source {
@@ -212,6 +238,52 @@ fn extract_base_path(resource: &Resource) -> Option<&PathBuf> {
         ResourceSource::Local(path) => Some(path),
         ResourceSource::Remote(_) => None,
     }
+}
+
+/// Load and parse CSV data from a resource
+async fn load_csv_data(resource: &Resource) -> Result<Vec<Vec<String>>, RenderError> {
+    // Load the CSV content
+    let content = match &resource.source {
+        ResourceSource::Local(path) => {
+            fs::read_to_string(path)
+                .map_err(|e| RenderError::ResourceNotFound(
+                    path.display().to_string(),
+                    e.to_string()
+                ))?
+        }
+        ResourceSource::Remote(url) => {
+            let url_str = url.to_string();
+            let response = reqwest::get(url.clone())
+                .await
+                .map_err(|e| RenderError::RemoteFetchError(url_str.clone(), e.to_string()))?;
+
+            if !response.status().is_success() {
+                return Err(RenderError::RemoteFetchError(
+                    url_str,
+                    format!("HTTP {}", response.status()),
+                ));
+            }
+
+            response
+                .text()
+                .await
+                .map_err(|e| RenderError::RemoteFetchError(url_str, e.to_string()))?
+        }
+    };
+
+    // Parse the CSV
+    let mut reader = csv::ReaderBuilder::new()
+        .has_headers(false)
+        .from_reader(content.as_bytes());
+
+    let mut rows = Vec::new();
+    for result in reader.records() {
+        let record = result.map_err(|e| RenderError::CsvError(e.to_string()))?;
+        let row: Vec<String> = record.iter().map(|s| s.to_string()).collect();
+        rows.push(row);
+    }
+
+    Ok(rows)
 }
 
 #[cfg(test)]

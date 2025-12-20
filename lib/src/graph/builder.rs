@@ -61,9 +61,10 @@ pub async fn build_graph(
 ) -> Result<DependencyGraph> {
     let mut graph = DependencyGraph::new(root.clone());
     let mut visited: HashMap<ResourceHash, bool> = HashMap::new();
+    let mut in_stack: HashMap<ResourceHash, bool> = HashMap::new();
 
     // Start recursive traversal
-    visit_resource(&root, &mut graph, &mut visited, db, frontmatter).await?;
+    visit_resource(&root, &mut graph, &mut visited, &mut in_stack, db, frontmatter).await?;
 
     debug!("Graph built with {} nodes and {} edges", graph.nodes.len(), graph.edges.len());
 
@@ -76,20 +77,31 @@ fn visit_resource<'a>(
     resource: &'a Resource,
     graph: &'a mut DependencyGraph,
     visited: &'a mut HashMap<ResourceHash, bool>,
+    in_stack: &'a mut HashMap<ResourceHash, bool>,
     db: &'a Surreal<Db>,
     frontmatter: &'a Frontmatter,
 ) -> BoxFuture<'a, Result<ResourceHash>> {
     Box::pin(async move {
     let hash = compute_resource_hash(resource);
 
-    // Check if already visited
+    // Check if currently in the recursion stack (cycle detection)
+    if in_stack.contains_key(&hash) {
+        debug!("Circular dependency detected");
+        return Err(crate::error::CompositionError::Parse(
+            crate::error::ParseError::CircularDependency {
+                cycle: format!("{:?}", resource.source),
+            }
+        ));
+    }
+
+    // Check if already fully processed
     if visited.contains_key(&hash) {
         debug!("Resource already visited, skipping");
         return Ok(hash);
     }
 
-    // Mark as being visited (for cycle detection)
-    visited.insert(hash, true);
+    // Mark as being processed (in the recursion stack)
+    in_stack.insert(hash, true);
 
     // Load and parse the resource
     debug!("Loading resource");
@@ -109,7 +121,7 @@ fn visit_resource<'a>(
         // Resolve relative paths based on the parent resource's location
         let resolved_dep = resolve_relative_resource(dep, resource)?;
 
-        let dep_hash = visit_resource(&resolved_dep, graph, visited, db, frontmatter).await?;
+        let dep_hash = visit_resource(&resolved_dep, graph, visited, in_stack, db, frontmatter).await?;
         dependency_hashes.push(dep_hash);
 
         // Add edge to graph
@@ -126,6 +138,10 @@ fn visit_resource<'a>(
     // Add node to graph
     graph.add_node(hash, node);
 
+    // Mark as fully processed (remove from stack, add to visited)
+    in_stack.remove(&hash);
+    visited.insert(hash, true);
+
     Ok(hash)
     })
 }
@@ -133,7 +149,7 @@ fn visit_resource<'a>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::path::PathBuf;
+    
     use tempfile::TempDir;
 
     async fn setup_test_db() -> (Surreal<Db>, TempDir) {
