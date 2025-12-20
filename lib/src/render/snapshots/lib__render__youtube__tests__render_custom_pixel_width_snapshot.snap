@@ -1,0 +1,22 @@
+---
+source: src/render/youtube.rs
+expression: html
+---
+<div class="dm-youtube-container" data-video-id="dQw4w9WgXcQ" data-width="800px">
+  <div class="dm-youtube-wrapper">
+    <iframe
+      class="dm-youtube-player"
+      src="https://www.youtube.com/embed/dQw4w9WgXcQ?enablejsapi=1"
+      frameborder="0"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+      allowfullscreen
+      aria-label="YouTube video player">
+    </iframe>
+    <button class="dm-youtube-maximize" aria-label="Maximize video">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+      </svg>
+    </button>
+  </div>
+</div>
+<div class="dm-youtube-backdrop" style="display: none;"></div>

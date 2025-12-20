@@ -294,9 +294,141 @@ For implementation details, see [Audio Player Design](../design/audio-player.md)
 
 ### 15. YouTube Video Embedding
 
-If a user wants to include an embedding of a YouTube video in their document then they can use the `::youtube <url or id>` directive.
+Embed YouTube videos directly in your documents with an enhanced player that includes maximize/modal functionality.
 
-For more details, read [YouTube Embedding](../design/youtube-embedding.md)
+**Syntax:**
+
+```md
+::youtube <video-reference> [width]
+```
+
+**Parameters:**
+- `<video-reference>` - YouTube video URL or video ID. Supported formats:
+  - Video ID: `dQw4w9WgXcQ` (11-character alphanumeric string with `-` and `_`)
+  - Watch URL: `https://www.youtube.com/watch?v=dQw4w9WgXcQ`
+  - Short URL: `https://youtu.be/dQw4w9WgXcQ`
+  - Embed URL: `https://www.youtube.com/embed/dQw4w9WgXcQ`
+  - /v/ URL: `https://youtube.com/v/dQw4w9WgXcQ`
+- `[width]` - Optional width specification (default: `512px`):
+  - Pixels: `800px`
+  - Rems: `32rem`, `32.5rem`
+  - Percentage: `80%` (0-100 range)
+
+**Examples:**
+
+```md
+# Simple video embed with default width (512px)
+::youtube dQw4w9WgXcQ
+
+# With custom pixel width
+::youtube https://www.youtube.com/watch?v=dQw4w9WgXcQ 800px
+
+# With rem width
+::youtube https://youtu.be/jNQXAC9IVRw 40rem
+
+# With percentage width
+::youtube 9bZkp7q19f0 90%
+
+# URL with query parameters
+::youtube https://www.youtube.com/watch?v=dQw4w9WgXcQ&feature=share
+```
+
+**Features:**
+
+- **16:9 Aspect Ratio:** Maintains proper video dimensions in default and modal states
+- **Maximize Button:** Click the maximize button (top-right) to view in modal mode
+- **Modal View:** 95vw width, centered viewport, with backdrop blur effect
+- **Keyboard Navigation:** Press `Escape` to exit modal mode
+- **Backdrop Dismiss:** Click the backdrop to exit modal mode
+- **Play State Preservation:** Video continues playing when transitioning between states
+- **YouTube IFrame API:** Full API integration for player control
+- **Self-Contained Output:** CSS and JavaScript are inlined for portability
+- **Asset Deduplication:** Multiple embeds share single CSS/JS assets
+- **Accessibility:** ARIA labels and keyboard navigation support
+
+**Output:**
+
+The directive generates self-contained HTML with:
+
+```html
+<div class="dm-youtube-container" data-video-id="dQw4w9WgXcQ" data-width="512px">
+  <div class="dm-youtube-wrapper">
+    <iframe class="dm-youtube-player"
+            src="https://www.youtube.com/embed/dQw4w9WgXcQ?enablejsapi=1"
+            frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen
+            aria-label="YouTube video player">
+    </iframe>
+    <button class="dm-youtube-maximize" aria-label="Maximize video">
+      <svg><!-- maximize icon --></svg>
+    </button>
+  </div>
+</div>
+<div class="dm-youtube-backdrop" style="display: none;"></div>
+
+<!-- Included once per document -->
+<style id="dm-youtube">/* inline CSS */</style>
+<script id="dm-youtube">/* inline JavaScript */</script>
+```
+
+**Styling:**
+
+The default styles provide:
+- Responsive container with custom width
+- 16:9 aspect ratio padding
+- Smooth transitions between states
+- Backdrop blur effect (8px)
+- Maximize button hover/focus states
+
+Override CSS classes to customize appearance:
+- `.dm-youtube-container` - Main container
+- `.dm-youtube-wrapper` - 16:9 wrapper
+- `.dm-youtube-player` - iframe element
+- `.dm-youtube-maximize` - Maximize button
+- `.dm-youtube-backdrop` - Modal backdrop
+- `.dm-youtube-container.modal` - Modal state
+
+**Error Handling:**
+
+Invalid inputs produce user-friendly error messages:
+
+```md
+# Invalid video ID (wrong length)
+::youtube invalid-id
+# Error: Could not extract video ID from 'invalid-id'.
+# Supported formats: youtube.com/watch?v=ID, youtu.be/ID, or 11-character ID
+
+# Invalid width (>100%)
+::youtube dQw4w9WgXcQ 150%
+# Error: Invalid percentage '150'. Must be 0-100%
+
+# Non-YouTube URL
+::youtube https://vimeo.com/123456
+# Error: Could not extract video ID from 'https://vimeo.com/123456'.
+# Supported formats: youtube.com/watch?v=ID, youtu.be/ID, or 11-character ID
+```
+
+**Browser Compatibility:**
+
+- Modern browsers with ES6+ support
+- Backdrop blur requires browser support (graceful degradation)
+- YouTube IFrame API requires JavaScript enabled
+
+**Security:**
+
+- Video IDs validated with strict regex (alphanumeric + `-` and `_` only)
+- URL extraction limited to youtube.com and youtu.be domains
+- HTTPS enforced for all YouTube embed URLs
+- No dynamic code execution (all JavaScript is static)
+
+**CSP Considerations:**
+
+If your site uses Content Security Policy (CSP), you may need to adjust headers to allow:
+- `frame-src https://www.youtube.com`
+- `script-src https://www.youtube.com` (for IFrame API)
+
+For more implementation details, see [YouTube Embedding Design](../design/youtube-embedding.md).
 
 ### 16. Vector Embeddings
 

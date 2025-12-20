@@ -8,6 +8,7 @@ use super::charts::{render_bar_chart, render_line_chart, render_pie_chart, rende
 use super::popover::render_popover as render_popover_component;
 use super::disclosure::render_disclosure as render_disclosure_component;
 use super::columns::render_columns as render_columns_component;
+use super::youtube::render_youtube_embed;
 
 /// Convert DarkMatter nodes to HTML
 ///
@@ -15,10 +16,24 @@ use super::columns::render_columns as render_columns_component;
 #[instrument(skip(nodes))]
 pub fn to_html(nodes: &[DarkMatterNode]) -> Result<String, RenderError> {
     let mut html = String::new();
+    let mut youtube_assets_included = false;
 
     for node in nodes {
         let node_html = render_node(node)?;
         html.push_str(&node_html);
+
+        // Include YouTube assets on first occurrence
+        if matches!(node, DarkMatterNode::YouTube { .. }) && !youtube_assets_included {
+            html.push_str(&format!(
+                "\n<style id=\"dm-youtube\">{}</style>",
+                super::youtube::youtube_css()
+            ));
+            html.push_str(&format!(
+                "\n<script id=\"dm-youtube\">{}</script>",
+                super::youtube::youtube_js()
+            ));
+            youtube_assets_included = true;
+        }
     }
 
     Ok(html)
@@ -55,6 +70,11 @@ fn render_node(node: &DarkMatterNode) -> Result<String, RenderError> {
             Err(RenderError::HtmlGenerationFailed(
                 "Audio directives must be processed before HTML generation".to_string()
             ))
+        }
+
+        // YouTube rendering
+        DarkMatterNode::YouTube { video_id, width } => {
+            Ok(render_youtube_embed(video_id, width))
         }
 
         // Charts
@@ -199,5 +219,181 @@ mod tests {
         assert_eq!(escape_html("<script>"), "&lt;script&gt;");
         assert_eq!(escape_html("A & B"), "A &amp; B");
         assert_eq!(escape_html("\"quote\""), "&quot;quote&quot;");
+    }
+
+    // YouTube asset deduplication tests
+    #[test]
+    fn test_youtube_single_embed_includes_assets() {
+        use crate::types::WidthSpec;
+
+        let nodes = vec![
+            DarkMatterNode::YouTube {
+                video_id: "dQw4w9WgXcQ".to_string(),
+                width: WidthSpec::Pixels(512),
+            },
+        ];
+
+        let html = to_html(&nodes).unwrap();
+
+        // Verify embed HTML is present
+        assert!(html.contains("dm-youtube-container"));
+        assert!(html.contains("dQw4w9WgXcQ"));
+
+        // Verify CSS is included exactly once
+        assert!(html.contains(r#"<style id="dm-youtube">"#));
+        let css_count = html.matches(r#"<style id="dm-youtube">"#).count();
+        assert_eq!(css_count, 1, "CSS should be included exactly once");
+
+        // Verify JS is included exactly once
+        assert!(html.contains(r#"<script id="dm-youtube">"#));
+        let js_count = html.matches(r#"<script id="dm-youtube">"#).count();
+        assert_eq!(js_count, 1, "JS should be included exactly once");
+    }
+
+    #[test]
+    fn test_youtube_multiple_embeds_assets_once() {
+        use crate::types::WidthSpec;
+
+        let nodes = vec![
+            DarkMatterNode::YouTube {
+                video_id: "dQw4w9WgXcQ".to_string(),
+                width: WidthSpec::Pixels(512),
+            },
+            DarkMatterNode::YouTube {
+                video_id: "jNQXAC9IVRw".to_string(),
+                width: WidthSpec::Pixels(800),
+            },
+            DarkMatterNode::YouTube {
+                video_id: "9bZkp7q19f0".to_string(),
+                width: WidthSpec::Rems(32.0),
+            },
+        ];
+
+        let html = to_html(&nodes).unwrap();
+
+        // Verify all embeds are present
+        assert!(html.contains("dQw4w9WgXcQ"));
+        assert!(html.contains("jNQXAC9IVRw"));
+        assert!(html.contains("9bZkp7q19f0"));
+
+        // Verify each embed has its container (count opening div tags with the class)
+        let container_count = html.matches(r#"<div class="dm-youtube-container""#).count();
+        assert_eq!(container_count, 3, "Should have 3 embed containers");
+
+        // Verify CSS is included exactly once
+        let css_count = html.matches(r#"<style id="dm-youtube">"#).count();
+        assert_eq!(css_count, 1, "CSS should be included exactly once despite multiple embeds");
+
+        // Verify JS is included exactly once
+        let js_count = html.matches(r#"<script id="dm-youtube">"#).count();
+        assert_eq!(js_count, 1, "JS should be included exactly once despite multiple embeds");
+    }
+
+    #[test]
+    fn test_youtube_mixed_with_other_nodes() {
+        use crate::types::WidthSpec;
+
+        let nodes = vec![
+            DarkMatterNode::Text("Introduction text".to_string()),
+            DarkMatterNode::YouTube {
+                video_id: "dQw4w9WgXcQ".to_string(),
+                width: WidthSpec::Pixels(512),
+            },
+            DarkMatterNode::Text("Middle text".to_string()),
+            DarkMatterNode::YouTube {
+                video_id: "jNQXAC9IVRw".to_string(),
+                width: WidthSpec::Pixels(800),
+            },
+            DarkMatterNode::Text("Conclusion text".to_string()),
+        ];
+
+        let html = to_html(&nodes).unwrap();
+
+        // Verify all content is present
+        assert!(html.contains("Introduction text"));
+        assert!(html.contains("Middle text"));
+        assert!(html.contains("Conclusion text"));
+        assert!(html.contains("dQw4w9WgXcQ"));
+        assert!(html.contains("jNQXAC9IVRw"));
+
+        // Verify assets included only once
+        let css_count = html.matches(r#"<style id="dm-youtube">"#).count();
+        assert_eq!(css_count, 1);
+        let js_count = html.matches(r#"<script id="dm-youtube">"#).count();
+        assert_eq!(js_count, 1);
+    }
+
+    #[test]
+    fn test_youtube_no_embeds_no_assets() {
+        let nodes = vec![
+            DarkMatterNode::Text("Just text".to_string()),
+            DarkMatterNode::Text("More text".to_string()),
+        ];
+
+        let html = to_html(&nodes).unwrap();
+
+        // Verify no YouTube assets are included
+        assert!(!html.contains(r#"<style id="dm-youtube">"#));
+        assert!(!html.contains(r#"<script id="dm-youtube">"#));
+        assert!(!html.contains("dm-youtube-container"));
+    }
+
+    #[test]
+    fn test_youtube_assets_order() {
+        use crate::types::WidthSpec;
+
+        let nodes = vec![
+            DarkMatterNode::YouTube {
+                video_id: "dQw4w9WgXcQ".to_string(),
+                width: WidthSpec::Pixels(512),
+            },
+        ];
+
+        let html = to_html(&nodes).unwrap();
+
+        // Find positions of embed, CSS, and JS
+        let embed_pos = html.find("dm-youtube-container").unwrap();
+        let css_pos = html.find(r#"<style id="dm-youtube">"#).unwrap();
+        let js_pos = html.find(r#"<script id="dm-youtube">"#).unwrap();
+
+        // Assets should come after the first embed
+        assert!(css_pos > embed_pos, "CSS should come after the first embed");
+        assert!(js_pos > embed_pos, "JS should come after the first embed");
+
+        // CSS should come before JS
+        assert!(css_pos < js_pos, "CSS should come before JS");
+    }
+
+    #[test]
+    fn test_youtube_different_widths_single_assets() {
+        use crate::types::WidthSpec;
+
+        let nodes = vec![
+            DarkMatterNode::YouTube {
+                video_id: "video1".to_string(),
+                width: WidthSpec::Pixels(512),
+            },
+            DarkMatterNode::YouTube {
+                video_id: "video2".to_string(),
+                width: WidthSpec::Rems(32.0),
+            },
+            DarkMatterNode::YouTube {
+                video_id: "video3".to_string(),
+                width: WidthSpec::Percentage(80),
+            },
+        ];
+
+        let html = to_html(&nodes).unwrap();
+
+        // Verify all embeds present with different widths
+        assert!(html.contains("video1"));
+        assert!(html.contains("video2"));
+        assert!(html.contains("video3"));
+
+        // Verify assets only included once despite different width configurations
+        let css_count = html.matches(r#"<style id="dm-youtube">"#).count();
+        assert_eq!(css_count, 1);
+        let js_count = html.matches(r#"<script id="dm-youtube">"#).count();
+        assert_eq!(js_count, 1);
     }
 }

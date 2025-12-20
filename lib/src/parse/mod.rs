@@ -1,6 +1,6 @@
 mod frontmatter;
 mod resource;
-mod darkmatter;
+pub mod darkmatter;
 mod markdown;
 
 pub use frontmatter::extract_frontmatter;

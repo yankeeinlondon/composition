@@ -65,6 +65,10 @@ pub enum DarkMatterNode {
         source: String,
         name: Option<String>,
     },
+    YouTube {
+        video_id: String,
+        width: super::youtube::WidthSpec,
+    },
 
     // Text/content
     Text(String),

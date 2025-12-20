@@ -8,6 +8,7 @@ mod popover;
 mod disclosure;
 mod columns;
 mod audio;
+pub mod youtube;
 
 pub use transclusion::resolve_transclusion;
 pub use interpolation::{process_interpolation, process_nodes_interpolation};
@@ -19,3 +20,4 @@ pub use popover::{render_popover, render_inline_popover, generate_popover_styles
 pub use disclosure::{render_disclosure, render_disclosure_open, generate_disclosure_styles};
 pub use columns::{render_columns, generate_columns_styles};
 pub use audio::process_audio_nodes;
+pub use youtube::{render_youtube_embed, youtube_css, youtube_js};
