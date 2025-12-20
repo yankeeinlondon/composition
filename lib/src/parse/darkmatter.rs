@@ -41,6 +41,15 @@ static INTERPOLATION: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(r"\{\{(\w+)\}\}").unwrap()
 });
 
+static AUDIO_DIRECTIVE: LazyLock<Regex> = LazyLock::new(|| {
+    // Match ::audio followed by a path, optionally followed by a quoted name
+    // Handles: ::audio ./file.mp3
+    //          ::audio ./file.mp3 "Name"
+    //          ::audio ./file.mp3 "Name with spaces"
+    //          ::audio "./path with spaces.mp3" "Name"
+    Regex::new(r#"^::audio\s+(?:"([^"]+)"|(\S+))(?:\s+"(.+)")?$"#).unwrap()
+});
+
 /// Parse a DarkMatter block directive
 pub fn parse_directive(line: &str, line_num: usize) -> Result<Option<DarkMatterNode>, ParseError> {
     let trimmed = line.trim();
@@ -146,6 +155,22 @@ pub fn parse_directive(line: &str, line_num: usize) -> Result<Option<DarkMatterN
                 directive: line.to_string(),
             }),
         }));
+    }
+
+    if let Some(caps) = AUDIO_DIRECTIVE.captures(trimmed) {
+        // Extract source path - could be quoted (group 1) or unquoted (group 2)
+        let source = caps.get(1)
+            .or_else(|| caps.get(2))
+            .map(|m| m.as_str().to_string())
+            .ok_or_else(|| ParseError::InvalidDirective {
+                line: line_num,
+                directive: line.to_string(),
+            })?;
+
+        // Extract optional name (group 3)
+        let name = caps.get(3).map(|m| m.as_str().to_string());
+
+        return Ok(Some(DarkMatterNode::Audio { source, name }));
     }
 
     // Check for summary/details directives
@@ -368,5 +393,63 @@ mod tests {
             DarkMatterNode::Text(t) => assert_eq!(t, "Just plain text"),
             _ => panic!("Expected Text node"),
         }
+    }
+
+    #[test]
+    fn test_parse_audio_directive() {
+        let node = parse_directive("::audio ./podcast.mp3", 1).unwrap().unwrap();
+
+        match node {
+            DarkMatterNode::Audio { source, name } => {
+                assert_eq!(source, "./podcast.mp3");
+                assert!(name.is_none());
+            }
+            _ => panic!("Expected Audio node"),
+        }
+    }
+
+    #[test]
+    fn test_parse_audio_directive_with_name() {
+        let node = parse_directive(r#"::audio ./podcast.mp3 "Episode 42""#, 1).unwrap().unwrap();
+
+        match node {
+            DarkMatterNode::Audio { source, name } => {
+                assert_eq!(source, "./podcast.mp3");
+                assert_eq!(name, Some("Episode 42".to_string()));
+            }
+            _ => panic!("Expected Audio node"),
+        }
+    }
+
+    #[test]
+    fn test_parse_audio_directive_with_quoted_path() {
+        let node = parse_directive(r#"::audio "./path with spaces.mp3""#, 1).unwrap().unwrap();
+
+        match node {
+            DarkMatterNode::Audio { source, name } => {
+                assert_eq!(source, "./path with spaces.mp3");
+                assert!(name.is_none());
+            }
+            _ => panic!("Expected Audio node"),
+        }
+    }
+
+    #[test]
+    fn test_parse_audio_directive_with_quoted_path_and_name() {
+        let node = parse_directive(r#"::audio "./path with spaces.mp3" "My Audio""#, 1).unwrap().unwrap();
+
+        match node {
+            DarkMatterNode::Audio { source, name } => {
+                assert_eq!(source, "./path with spaces.mp3");
+                assert_eq!(name, Some("My Audio".to_string()));
+            }
+            _ => panic!("Expected Audio node"),
+        }
+    }
+
+    #[test]
+    fn test_parse_audio_directive_invalid() {
+        let result = parse_directive("::audio", 1).unwrap();
+        assert!(result.is_none());
     }
 }

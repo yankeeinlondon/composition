@@ -904,3 +904,75 @@ Once the plan is approved:
 3. **For parallel implementation:** Coordinate sub-agents based on parallelization groups
 4. **Run tests:** `cargo test` or `cargo nextest run`
 5. **Check benchmarks:** `cargo bench` for performance-critical changes
+
+---
+
+## ⚠️ CRITICAL: Plan Execution Warning
+
+**If you use `/execute-plan` to implement this plan:**
+
+The `/execute-plan` command uses orchestrator agents to coordinate implementation. **These orchestrators have historically failed by writing completion reports WITHOUT actually creating code.**
+
+**To prevent this failure, your plan MUST:**
+
+1. **Be EXTREMELY specific about files to create:**
+   - List EXACT file paths for every file
+   - Don't say "create audio module" - say "create lib/src/audio/mod.rs, lib/src/audio/types.rs, lib/src/audio/cache.rs"
+
+2. **Include verification steps in acceptance criteria:**
+   - ✅ GOOD: "File `lib/src/audio/types.rs` exists with `AudioSource` struct"
+   - ❌ BAD: "Core types implemented"
+
+3. **Specify test count expectations:**
+   - ✅ GOOD: "Add 5 unit tests for AudioSource hashing"
+   - ❌ BAD: "Tests cover audio types"
+
+4. **List dependencies explicitly:**
+   - ✅ GOOD: "Add `symphonia = { version = \"0.5\", features = [\"mp3\", \"wav\"] }` to lib/Cargo.toml"
+   - ❌ BAD: "Add symphonia dependency"
+
+**Why This Matters:**
+
+Orchestrators will verify implementation by:
+- Running `ls` on expected files
+- Running `grep` on Cargo.toml for dependencies
+- Running `cargo test` within the blast radius
+- Checking line counts with `wc -l`
+
+If your plan is vague, orchestrators may SIMULATE completion instead of VERIFYING it.
+
+**Example of a GOOD Phase:**
+
+```markdown
+### Phase 1: Core Type Definitions
+
+**Files to create:**
+- `lib/src/audio/mod.rs` - Module entry point
+- `lib/src/audio/types.rs` - AudioSource, AudioFormat, AudioMetadata structs
+
+**Dependencies to add:**
+- None (uses existing xxhash-rust)
+
+**Acceptance Criteria:**
+- [ ] File `lib/src/audio/mod.rs` exists
+- [ ] File `lib/src/audio/types.rs` exists with >200 lines
+- [ ] `grep "pub struct AudioSource" lib/src/audio/types.rs` succeeds
+- [ ] `cargo test audio::types` runs 10+ tests
+- [ ] All new tests pass
+```
+
+**Example of a BAD Phase:**
+
+```markdown
+### Phase 1: Core Type Definitions
+
+**Deliverables:**
+- Audio types
+
+**Acceptance Criteria:**
+- [ ] Types are implemented
+```
+
+The BAD example gives orchestrators no way to verify success, so they'll just write a report claiming success.
+
+---

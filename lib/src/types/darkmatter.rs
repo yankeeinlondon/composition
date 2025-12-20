@@ -60,6 +60,12 @@ pub enum DarkMatterNode {
         details: Vec<DarkMatterNode>,
     },
 
+    // Media
+    Audio {
+        source: String,
+        name: Option<String>,
+    },
+
     // Text/content
     Text(String),
     Interpolation {

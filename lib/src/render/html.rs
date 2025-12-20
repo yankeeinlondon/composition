@@ -50,6 +50,13 @@ fn render_node(node: &DarkMatterNode) -> Result<String, RenderError> {
             ))
         }
 
+        // Audio should be processed before HTML generation
+        DarkMatterNode::Audio { .. } => {
+            Err(RenderError::HtmlGenerationFailed(
+                "Audio directives must be processed before HTML generation".to_string()
+            ))
+        }
+
         // Charts
         DarkMatterNode::BarChart { data } => {
             render_bar_chart(data, 800, 400)

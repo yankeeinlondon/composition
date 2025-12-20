@@ -19,12 +19,14 @@
 //! ```
 
 pub mod cache;
+pub mod html;
 pub mod metadata;
 pub mod processor;
 pub mod types;
 
 // Re-export commonly used types
 pub use cache::{AudioCache, AudioCacheEntry, NewAudioCacheEntry};
+pub use html::{generate_audio_html, html_escape, AudioHtmlOptions};
 pub use metadata::{
     compute_content_hash, detect_audio_format, extract_audio_metadata, load_audio_bytes,
 };

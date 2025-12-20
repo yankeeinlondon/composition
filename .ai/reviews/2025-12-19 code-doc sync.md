@@ -176,7 +176,8 @@ Total Inconsistencies: 45 (Critical: 14, Major: 10, Minor: 8)
 
 **Impact:** Misleading documentation directs developers to wrong crate.
 
-**Suggested Fix:** Update docs to reflect `yaml-rust2` (implementation is working and tested).
+**Suggested Fix:** The implementation SHOULD have used `markdown-frontmatter` as this is much more fit for purpose! Refactor this functionality using `markdown-frontmatter`
+
 
 ### [CRITICAL] OpenTelemetry not integrated
 
@@ -208,25 +209,7 @@ Total Inconsistencies: 45 (Critical: 14, Major: 10, Minor: 8)
 
 **Suggested Fix:** Update docs to reflect that only `image` crate is used.
 
-### [MAJOR] Broken documentation links
 
-**Location:** `docs/reference/tech-stack.md:5,8`
-
-**Issue:** Links to `../kb/thiserror.md` and `../kb/rust-testing.md` don't exist.
-
-**Impact:** Broken links create poor developer experience.
-
-**Suggested Fix:** Link to external crate docs or remove links entirely.
-
-### [MINOR] NPM publishing not configured
-
-**Location:** `docs/reference/tech-stack.md:25`
-
-**Issue:** States CLI "will use" napi-rs or Neon for npm, but no packaging infrastructure exists.
-
-**Impact:** Appears to be planned future work. Documentation could mislead about npm availability.
-
-**Suggested Fix:** Add "Future:" prefix to clarify not yet implemented.
 
 ### [MINOR] CLI edition "2024"
 
@@ -236,7 +219,7 @@ Total Inconsistencies: 45 (Critical: 14, Major: 10, Minor: 8)
 
 **Impact:** Edition divergence between modules.
 
-**Suggested Fix:** Document why different editions are used or align both to 2021.
+**Suggested Fix:** all modules should use "2024".
 
 ---
 
@@ -282,7 +265,7 @@ Total Inconsistencies: 45 (Critical: 14, Major: 10, Minor: 8)
 
 **Impact:** No visibility into semantic search capabilities.
 
-**Suggested Fix:** Document embedding table and vector similarity features.
+**Suggested Fix:** Document embedding table and vector similarity features. Then review the new text added to the `docs/features/darkmatter-dsl.md` under the heading `### 16. Vector Embeddings` and make sure that that is implemented for now.
 
 ### [CRITICAL] Incorrect image cache description
 
@@ -313,16 +296,6 @@ Total Inconsistencies: 45 (Critical: 14, Major: 10, Minor: 8)
 **Impact:** Developers don't know it's persisted to disk vs in-memory, or the performance characteristics.
 
 **Suggested Fix:** Specify RocksDB backend and explain why it was chosen.
-
-### [MINOR] Broken skill link
-
-**Location:** `docs/reference/database.md:3`
-
-**Issue:** Relative path `../.claude/skills/surrealdb/SKILL.md` is broken in some contexts.
-
-**Impact:** Link may not resolve correctly in GitHub or documentation generators.
-
-**Suggested Fix:** Use repo-root relative path: `.claude/skills/surrealdb/SKILL.md`.
 
 ---
 
@@ -358,7 +331,7 @@ Total Inconsistencies: 45 (Critical: 14, Major: 10, Minor: 8)
 
 **Impact:** Confusion mapping docs to code. Violates Rust naming conventions.
 
-**Suggested Fix:** Rename to `TwoXl` in code and update docs to reference it as "2xl (TwoXl in code)".
+**Suggested Fix:** Rename to `xxl` in code and update docs to reference it as "xxl".
 
 ### [MAJOR] Breakpoint documentation missing context
 
@@ -379,29 +352,3 @@ Total Inconsistencies: 45 (Critical: 14, Major: 10, Minor: 8)
 **Impact:** Unclear whether system uses px or rem. Missing explanation that 640px ÷ 16px/rem = 40rem.
 
 **Suggested Fix:** Clarify that library uses pixels internally and rem values are for reference only.
-
----
-
-## Summary Statistics
-
-**Documents Analyzed:** 9 of 19 (47%)
-**Documents Interrupted:** 10 (smart-image-requirements, smart-image, valid-file-extensions, cli-features, utility-frontmatter, darkmatter-dsl, models, ai-recommendations, cache-strategy, library-features)
-
-**Total Inconsistencies Found:** 45
-- Critical: 14 (31%)
-- Major: 10 (22%)
-- Minor: 8 (18%)
-
-**Most Problematic Documents:**
-1. database.md - 8 inconsistencies (5 Critical)
-2. tech-stack.md - 7 inconsistencies (2 Critical)
-3. lsp-technical-strategy.md - 8 inconsistencies (1 Critical)
-4. breakpoints.md - 5 inconsistencies (2 Critical)
-5. lsp-features.md - 6 inconsistencies (3 Critical)
-
-**Common Issues:**
-- Empty/TBD schemas in production code
-- LSP module completely unimplemented despite extensive documentation
-- Missing implementations for documented features (gitignore filtering, utility variables, audio/video scopes)
-- Broken documentation links
-- Documentation-code naming mismatches

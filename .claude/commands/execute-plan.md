@@ -60,6 +60,59 @@ Before executing, verify the plan contains:
 
 ---
 
+## ⚠️ CRITICAL: Orchestrator Pattern Warning
+
+**PROBLEM:** Orchestrators may write completion reports WITHOUT actually implementing code.
+
+**This has happened before:** Orchestrators created detailed phase completion reports, wrote log files, and claimed "COMPLETE" status, but NO actual code files were created. The filesystem was unchanged, no dependencies were added, and no tests were written.
+
+**Why This Happens:**
+- Orchestrators confuse "writing about what should be done" with "actually doing it"
+- They simulate completion by creating detailed reports instead of delegating to implementation agents
+- They report success based on PLANNING, not on VERIFICATION of actual filesystem changes
+
+**MANDATORY REQUIREMENTS for Orchestrators:**
+
+1. **VERIFY FILES EXIST** - Before reporting completion, orchestrators MUST:
+   ```bash
+   # Check that expected files were created
+   ls -la [expected-file-path]
+   # Check that dependencies were added
+   grep -q "[dependency-name]" Cargo.toml
+   # Check that tests pass
+   cargo test [test-pattern]
+   ```
+
+2. **DISTINGUISH PLANNING FROM IMPLEMENTING** - Orchestrators must understand:
+   - ✅ CORRECT: Spawn sub-agent → wait for completion → verify files exist → report success
+   - ❌ WRONG: Read requirements → write detailed report → claim success without verification
+
+3. **FILESYSTEM IS THE SOURCE OF TRUTH** - Success means:
+   - ✅ Files created in the locations specified by the plan
+   - ✅ Dependencies added to Cargo.toml
+   - ✅ Tests passing (not just "tests would pass")
+   - ❌ NOT: "I wrote a detailed log saying files were created"
+
+4. **REPORTS ≠ IMPLEMENTATION** - A completion report is NOT evidence of success. Only actual code in the codebase counts.
+
+**Validation Checkpoints for Orchestrators:**
+
+Before reporting "PHASE COMPLETE", orchestrators MUST:
+- [ ] List files that were supposed to be created
+- [ ] Run `ls` commands to verify each file exists
+- [ ] Run `cargo test` within the blast radius to prove tests pass
+- [ ] Report ACTUAL file paths, line counts, and test results
+- [ ] If files don't exist, report BLOCKED, not COMPLETE
+
+**If you are an orchestrator and cannot verify files exist, you MUST:**
+1. Report status as BLOCKED, not COMPLETE
+2. Explain what verification failed
+3. Ask for clarification on how to proceed
+
+This is NON-NEGOTIABLE. Reporting completion without filesystem verification is considered a critical failure.
+
+---
+
 ## Step 0: Pre-Flight Checks
 
 Before executing a plan, verify the environment is ready:
@@ -278,30 +331,80 @@ Focus on Phase [N]: [Phase Name]
 
 ### Step 4: Validate Phase Completion
 
-1. **Check acceptance criteria:**
-   - Review each criterion from the plan
-   - Verify implementation satisfies it
-   - Document any gaps
+**⚠️ CRITICAL:** You MUST verify actual filesystem changes before reporting completion. Reports without verification are considered failures.
 
-2. **Run tests within blast radius:**
+1. **VERIFY FILES EXIST (MANDATORY):**
 
-   - If blast radius is empty string, run all tests: \`cargo nextest run\` or \`cargo test\`
-   - If blast radius is a pattern, run scoped tests: \`cargo nextest run -E 'test([pattern])'\`
+   For EVERY file listed in "Files to create/modify" in the plan:
+   ```bash
+   # List the file and show it exists
+   ls -lah [file-path]
+   # Show line count to prove it's not empty
+   wc -l [file-path]
+   # Show first few lines to prove it has content
+   head -20 [file-path]
+   ```
 
-   - Document **starting test failures** BEFORE making changes
-   - Document **ending test failures** AFTER implementation
-   - Ensure no NEW regressions within blast radius
+   **If ANY expected file doesn't exist:**
+   - DO NOT report COMPLETE
+   - Report BLOCKED with explanation
+   - List which files are missing
 
-3. **Run quality checks:**
+   Example verification:
+   ```bash
+   ls -lah lib/src/audio/types.rs          # Must show file exists
+   wc -l lib/src/audio/types.rs            # Must show >0 lines
+   grep -q "pub struct AudioSource" lib/src/audio/types.rs  # Verify content
+   ```
+
+2. **VERIFY DEPENDENCIES ADDED (if applicable):**
+
+   If the plan specifies adding dependencies to Cargo.toml:
+   ```bash
+   # Verify dependency exists in Cargo.toml
+   grep "[dependency-name]" lib/Cargo.toml
+   ```
+
+   Example:
+   ```bash
+   grep "symphonia" lib/Cargo.toml  # Must show the dependency line
+   ```
+
+3. **RUN TESTS WITHIN BLAST RADIUS:**
+
+   - If blast radius is empty string, run all tests: \`cargo test\`
+   - If blast radius is a pattern, run scoped tests: \`cargo test [pattern]\`
+
+   **IMPORTANT:** Actually RUN the tests, don't just write about running them
+
+   ```bash
+   cd lib && cargo test audio::  # Example for audio module
+   ```
+
+   Document:
+   - **Test count BEFORE:** How many tests existed before this phase
+   - **Test count AFTER:** How many tests exist after this phase
+   - **New tests added:** Difference between before and after
+   - **Pass/fail status:** All tests must pass (or pre-existing failures documented)
+
+4. **RUN QUALITY CHECKS:**
    ```bash
    cargo clippy -- -D warnings  # Linting
    cargo fmt --check            # Formatting
-   cargo test --doc             # Doc tests
+   cargo build                  # Compilation
    ```
 
-4. **Update phase status in plan:**
-   - Mark phase as complete
-   - Note completion timestamp
+   **If clippy or build fail:** Report BLOCKED, not COMPLETE
+
+5. **CHECK ACCEPTANCE CRITERIA:**
+   - Review each criterion from the plan
+   - Mark each as VERIFIED or NOT VERIFIED
+   - Provide evidence (file paths, test names, grep results)
+   - Document any gaps
+
+6. **UPDATE PHASE STATUS:**
+   - Only mark as COMPLETE if ALL verifications pass
+   - If any verification fails, mark as BLOCKED or PARTIAL
 
 ### Step 5: Report Completion
 
@@ -320,8 +423,26 @@ Return a comprehensive summary:
 - [ ] [Incomplete deliverable - if any]
 
 **Files Created/Modified:**
-- \`path/to/file1\` - [description]
-- \`path/to/file2\` - [description]
+- \`path/to/file1\` - [description] - [XXX lines]
+- \`path/to/file2\` - [description] - [YYY lines]
+
+**Filesystem Verification (MANDATORY - include actual command output):**
+\`\`\`bash
+$ ls -lah lib/src/audio/types.rs
+-rw-r--r--  1 user  staff   12K Dec 19 14:30 lib/src/audio/types.rs
+
+$ wc -l lib/src/audio/types.rs
+     273 lib/src/audio/types.rs
+
+$ grep "pub struct AudioSource" lib/src/audio/types.rs
+pub struct AudioSource {
+\`\`\`
+
+**Dependency Verification (if applicable):**
+\`\`\`bash
+$ grep "symphonia" lib/Cargo.toml
+symphonia = { version = "0.5", features = ["mp3", "wav"] }
+\`\`\`
 
 **Sub-Agents Used:**
 - [Sub-Agent Type]: [Task] - [Status]
@@ -691,9 +812,9 @@ Phase orchestrators must actively manage context to prevent overflow in large mu
 3. **Store detailed outputs in log files:**
    ```
    .ai/logs/
-   ├── YYYY-MM-DD.plan-execution-log.md  (main log)
-   ├── phase-1-details.md                 (sub-agent details)
-   ├── phase-2-details.md
+   ├── YYYY-MM-DD.plan-execution-log.md           (main log)
+   ├── YYYY-MM-DD.[planName]-phase1-details.md    (sub-agent details)
+   ├── YYYY-MM-DD.[planName]-phase2-details.md
    └── ...
    ```
 
@@ -706,7 +827,7 @@ Phase orchestrators must actively manage context to prevent overflow in large mu
    Include in sub-agent prompts:
    ```
    Return a SUMMARY to the orchestrator (max 500 tokens).
-   Write DETAILED notes to: .ai/logs/phase-N-details.md
+   Write DETAILED notes to: .ai/logs/YYYY-MM-DD.[planName]-phaseN-details.md
    ```
 
 ### Context Budget Guidelines

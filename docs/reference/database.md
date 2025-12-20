@@ -1,6 +1,6 @@
 # Composition Database
 
-We will use the [SurrealDB](../.claude/skills/surrealdb/SKILL.md) for storing all state which this library depends on.
+We will use the [SurrealDB](../../.claude/skills/surrealdb/SKILL.md) for storing all state which this library depends on.
 
 The main areas which will need to be models are:
 

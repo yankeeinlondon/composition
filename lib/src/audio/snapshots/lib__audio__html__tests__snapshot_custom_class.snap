@@ -1,0 +1,15 @@
+---
+source: src/audio/html.rs
+assertion_line: 535
+expression: html
+---
+<div class="audio-player podcast-player dark-theme">
+  <audio controls preload="metadata">
+    <source src="audio/podcast.mp3" type="audio/mpeg">
+    Your browser does not support the audio element.
+  </audio>
+  <div class="audio-info">
+    <span class="audio-name">Podcast Episode 1</span>
+    <span class="audio-duration">3:00</span>
+  </div>
+</div>

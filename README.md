@@ -10,6 +10,21 @@ This monorepo has the following packages:
 
 To provide a Rust library, CLI, and LSP that can compose content together using a myriad of strategies which are enabled by a [custom DSL](./docs/features/darkmatter-dsl.md) which sits on top of standard [CommonMark](https://commonmark.org/) and [GFM](https://github.github.com/gfm/) based Markdown content.
 
+## Key Features
+
+The DarkMatter DSL extends Markdown with powerful composition directives:
+
+- **Transclusion** (`::file`) - Include external content
+- **AI-Powered Summarization** (`::summarize`) - Generate summaries with LLMs
+- **Content Consolidation** (`::consolidate`) - Merge multiple documents
+- **Smart Images** (`::image`) - Responsive images with automatic optimization
+- **Audio Player** (`::audio`) - Embed HTML5 audio with metadata extraction
+- **Tables & Charts** - Data visualization with inline or external data
+- **Frontmatter Interpolation** - Dynamic variable substitution
+- **Block Columns** - Responsive multi-column layouts
+
+See the [DarkMatter DSL documentation](./docs/features/darkmatter-dsl.md) for complete syntax and examples.
+
 ## Modules
 
 ### Library Module

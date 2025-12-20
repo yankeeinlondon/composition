@@ -7,6 +7,7 @@ mod charts;
 mod popover;
 mod disclosure;
 mod columns;
+mod audio;
 
 pub use transclusion::resolve_transclusion;
 pub use interpolation::{process_interpolation, process_nodes_interpolation};
@@ -17,3 +18,4 @@ pub use charts::{render_bar_chart, render_line_chart, render_pie_chart, render_a
 pub use popover::{render_popover, render_inline_popover, generate_popover_styles, generate_popover_script};
 pub use disclosure::{render_disclosure, render_disclosure_open, generate_disclosure_styles};
 pub use columns::{render_columns, generate_columns_styles};
+pub use audio::process_audio_nodes;

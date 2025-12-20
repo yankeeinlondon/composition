@@ -1,0 +1,15 @@
+---
+source: src/audio/html.rs
+assertion_line: 552
+expression: html
+---
+<div class="audio-player">
+  <audio controls preload="metadata">
+    <source src="audio/unknown.mp3" type="audio/mpeg">
+    Your browser does not support the audio element.
+  </audio>
+  <div class="audio-info">
+    <span class="audio-name">Unknown Duration</span>
+    
+  </div>
+</div>

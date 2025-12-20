@@ -225,9 +225,71 @@ See the [Block Columns](./block-columns.md) specification for more details.
 
 ### 14. Audio Content
 
-If a user wants to include Audio content in a document they can use the `::audio <file>` directive to include it. Doing this will embed a small audio player -- using HTML -- which can play and pause the file.
+If a user wants to include audio content in a document, they can use the `::audio` directive to embed an HTML5 audio player.
 
-For more details, read [Audio Player](../design/audio-player.md).
+**Syntax:**
+
+```md
+::audio <source> [name]
+```
+
+**Parameters:**
+- `<source>` - Path to the audio file (MP3 or WAV format). Can be:
+  - Relative path: `./audio/podcast.mp3`
+  - Absolute path: `/Users/name/music/song.wav`
+  - Path with spaces: `"./my audio/file.mp3"` (use quotes)
+- `[name]` - Optional custom display name (in quotes if it contains spaces)
+
+**Examples:**
+
+```md
+# Simple audio embed
+::audio ./podcast.mp3
+
+# With custom name
+::audio ./episode-42.mp3 "Episode 42: The Answer"
+
+# Path with spaces
+::audio "./My Music/favorite-song.wav"
+
+# Both quoted
+::audio "./audio files/interview.mp3" "Interview with Jane Doe"
+```
+
+**Features:**
+- **Metadata Extraction:** Automatically extracts duration, bitrate, sample rate, and ID3 tags (title, artist, album)
+- **Caching:** Metadata is cached by content hash to avoid reprocessing unchanged files
+- **Dual Rendering Modes:**
+  - **File Reference** (default): Copies audio file to output directory with hash-based filename
+  - **Inline Mode** (`--inline` flag): Encodes audio as base64 data URI for portable HTML
+- **Display Priority:** Shows custom name → ID3 title → filename
+
+**Output:**
+
+The directive generates an HTML5 audio player:
+
+```html
+<div class="audio-player">
+  <audio controls preload="metadata">
+    <source src="audio/hash.mp3" type="audio/mpeg">
+    Your browser does not support the audio element.
+  </audio>
+  <div class="audio-info">
+    <span class="audio-name">Episode 42</span>
+    <span class="audio-duration">12:34</span>
+  </div>
+</div>
+```
+
+**Styling:**
+
+Default CSS is provided in `lib/assets/audio-player.css`. Override the `.audio-player` class to customize appearance.
+
+**Supported Formats:**
+- MP3 (audio/mpeg)
+- WAV (audio/wav)
+
+For implementation details, see [Audio Player Design](../design/audio-player.md).
 
 
 ### 15. YouTube Video Embedding
@@ -235,6 +297,12 @@ For more details, read [Audio Player](../design/audio-player.md).
 If a user wants to include an embedding of a YouTube video in their document then they can use the `::youtube <url or id>` directive.
 
 For more details, read [YouTube Embedding](../design/youtube-embedding.md)
+
+### 16. Vector Embeddings
+
+To achieve a semantic search, the content must have a vector embedding. Currently we do not have any semantic search features but that will be added later.
+
+When a page has the frontmatter property `embeddings` set to true then the page's content will be used to create an embedding vector and will be stored into the database.
 
 ## Caching Semantics
 
